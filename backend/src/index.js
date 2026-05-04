@@ -34,6 +34,8 @@ app.use('/api/appointments', require('./routes/appointments'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/reports', require('./routes/reports'));
+app.use('/api/messages', require('./routes/messages'));
+app.use('/api/settings', require('./routes/settings'));
 
 app.get('/api/health', (req, res) => res.json({ success: true, message: 'Server is running', timestamp: new Date() }));
 

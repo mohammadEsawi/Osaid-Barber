@@ -158,13 +158,37 @@ CREATE TABLE IF NOT EXISTS settings (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- =====================
+-- CONTACT MESSAGES
+-- =====================
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id SERIAL PRIMARY KEY,
+  sender_name VARCHAR(150) NOT NULL,
+  sender_phone VARCHAR(20),
+  sender_email VARCHAR(255),
+  message TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_contact_messages_is_read ON contact_messages(is_read);
+
 -- Default settings
 INSERT INTO settings (key, value) VALUES
   ('shop_name', 'أوسيد باربر'),
-  ('shop_phone', '+966-xxx-xxxx'),
-  ('shop_address', 'الرياض، المملكة العربية السعودية'),
+  ('shop_phone', '+972 515718974'),
+  ('shop_address', 'بيتا الفوقا - نابلس'),
   ('shop_email', 'info@osaidbarber.com'),
+  ('shop_location_url', ''),
   ('booking_cancellation_hours', '2'),
   ('slot_duration_minutes', '30'),
-  ('shop_description', 'صالون حلاقة احترافي يقدم أفضل الخدمات')
+  ('shop_description', 'صالون حلاقة احترافي يقدم أفضل الخدمات'),
+  ('stat_1_value', '+2000'),
+  ('stat_1_label', 'عميل سعيد'),
+  ('stat_2_value', '10+'),
+  ('stat_2_label', 'سنوات خبرة'),
+  ('stat_3_value', '8'),
+  ('stat_3_label', 'خدمة متخصصة'),
+  ('stat_4_value', '4.9'),
+  ('stat_4_label', 'تقييم العملاء')
 ON CONFLICT (key) DO NOTHING;

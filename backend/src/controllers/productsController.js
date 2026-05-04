@@ -64,3 +64,8 @@ exports.remove = async (req, res) => {
     res.status(500).json({ success: false, message: 'خطأ في الخادم' });
   }
 };
+
+exports.uploadImage = (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, message: 'لم يتم رفع أي ملف' });
+  res.json({ success: true, data: { image_url: `/uploads/products/${req.file.filename}` } });
+};

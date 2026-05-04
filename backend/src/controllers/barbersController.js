@@ -157,3 +157,20 @@ exports.removeUnavailableSlot = async (req, res) => {
     res.status(500).json({ success: false, message: 'خطأ في الخادم' });
   }
 };
+
+exports.uploadImage = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'لم يتم رفع أي ملف' });
+
+    if (req.user.role === 'barber') {
+      const check = await query('SELECT id FROM barbers WHERE id = $1 AND user_id = $2', [req.params.id, req.user.id]);
+      if (check.rows.length === 0) return res.status(403).json({ success: false, message: 'غير مصرح' });
+    }
+
+    const imageUrl = `/uploads/barbers/${req.file.filename}`;
+    await query('UPDATE barbers SET image_url = $1 WHERE id = $2', [imageUrl, req.params.id]);
+    res.json({ success: true, data: { image_url: imageUrl } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ في رفع الصورة' });
+  }
+};
