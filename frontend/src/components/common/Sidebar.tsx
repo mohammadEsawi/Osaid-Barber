@@ -25,7 +25,7 @@ export default function Sidebar({ items, isOpen, onClose, title = 'القائم�
           <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
             <Scissors size={16} className="text-white" />
           </div>
-          <span className="text-white font-bold">أوسيد باربر</span>
+          <span className="text-white font-bold">صالون أسيــد</span>
         </div>
         {onClose && (
           <button onClick={onClose} className="lg:hidden text-zinc-400 hover:text-white p-1">

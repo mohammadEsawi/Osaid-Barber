@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, ExternalLink } from 'lucide-react';
+import { FaInstagram, FaFacebook, FaTiktok } from 'react-icons/fa';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import { FormInput, FormTextarea } from '../../components/ui/FormInput';
@@ -82,10 +83,34 @@ export default function ContactPage() {
                 <div className="flex justify-between"><span className="text-zinc-400">الاثنين</span><span className="text-red-400">مغلق</span></div>
               </div>
             </div>
+
+            {/* Social media */}
+            <div className="card">
+              <h3 className="text-white font-semibold mb-4">تابعنا على</h3>
+              <div className="flex gap-3">
+                {[
+                  { href: 'https://www.instagram.com/osaid.dwikat', icon: FaInstagram, label: 'انستقرام', color: 'hover:bg-pink-600' },
+                  { href: 'https://www.facebook.com/osaid.dwikat', icon: FaFacebook,  label: 'فيسبوك',   color: 'hover:bg-blue-600' },
+                  { href: 'https://www.tiktok.com/@osaid.dwikat',   icon: FaTiktok,   label: 'تيك توك',   color: 'hover:bg-zinc-600' },
+                ].map(({ href, icon: Icon, label, color }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={label}
+                    className={`flex items-center gap-2 px-4 py-2.5 bg-zinc-800 ${color} rounded-xl text-zinc-400 hover:text-white transition-all text-sm font-medium`}
+                  >
+                    <Icon size={18} />
+                    {label}
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Form */}
-          <div className="card">
+          <div className="card mt-12">
             <h2 className="text-xl font-bold text-white mb-6">أرسل لنا رسالة</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <FormInput

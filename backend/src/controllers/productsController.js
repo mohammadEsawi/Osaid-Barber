@@ -58,7 +58,8 @@ exports.update = async (req, res) => {
 
 exports.remove = async (req, res) => {
   try {
-    await query('UPDATE products SET is_active = false, updated_at=NOW() WHERE id = $1', [req.params.id]);
+    const result = await query('DELETE FROM products WHERE id = $1 RETURNING id', [req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'المنتج غير موجود' });
     res.json({ success: true, message: 'تم حذف المنتج بنجاح' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'خطأ في الخادم' });

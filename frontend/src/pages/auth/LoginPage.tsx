@@ -38,8 +38,8 @@ export default function LoginPage() {
             <div className="w-12 h-12 bg-amber-600 rounded-2xl flex items-center justify-center">
               <Scissors size={26} className="text-white" />
             </div>
-            <span className="text-white font-bold text-2xl">أوسيد باربر</span>
-          </Link>
+      <span className="text-white font-bold text-2xl">صالــون أسيــد</span>          
+  </Link>
           <h1 className="text-2xl font-bold text-white">تسجيل الدخول</h1>
           <p className="text-zinc-400 mt-1">لوحة تحكم المشرف والحلاق</p>
         </div>
@@ -51,7 +51,6 @@ export default function LoginPage() {
               type="email"
               value={form.email}
               onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              placeholder="admin@osaidbarber.com"
               required
               autoComplete="email"
             />
@@ -62,7 +61,6 @@ export default function LoginPage() {
                   type={showPass ? 'text' : 'password'}
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                  placeholder="••••••••"
                   required
                   className="input-field pl-10"
                   autoComplete="current-password"

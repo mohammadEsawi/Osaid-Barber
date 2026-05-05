@@ -1,4 +1,4 @@
-const pool = require('../config/database');
+const { query } = require('../config/database');
 
 const createMessage = async (req, res, next) => {
   try {
@@ -6,7 +6,7 @@ const createMessage = async (req, res, next) => {
     if (!sender_name || !message) {
       return res.status(400).json({ success: false, message: 'الاسم والرسالة مطلوبان' });
     }
-    const result = await pool.query(
+    const result = await query(
       `INSERT INTO contact_messages (sender_name, sender_phone, sender_email, message)
        VALUES ($1,$2,$3,$4) RETURNING *`,
       [sender_name, sender_phone || null, sender_email || null, message]
@@ -25,8 +25,8 @@ const getMessages = async (req, res, next) => {
     queryStr += ' ORDER BY created_at DESC';
 
     const [messages, unread] = await Promise.all([
-      pool.query(queryStr),
-      pool.query('SELECT COUNT(*) FROM contact_messages WHERE is_read = false'),
+      query(queryStr),
+      query('SELECT COUNT(*) FROM contact_messages WHERE is_read = false'),
     ]);
 
     res.json({
@@ -41,7 +41,7 @@ const getMessages = async (req, res, next) => {
 
 const markRead = async (req, res, next) => {
   try {
-    await pool.query('UPDATE contact_messages SET is_read = true WHERE id = $1', [req.params.id]);
+    await query('UPDATE contact_messages SET is_read = true WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     next(err);
@@ -50,7 +50,7 @@ const markRead = async (req, res, next) => {
 
 const deleteMessage = async (req, res, next) => {
   try {
-    await pool.query('DELETE FROM contact_messages WHERE id = $1', [req.params.id]);
+    await query('DELETE FROM contact_messages WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     next(err);

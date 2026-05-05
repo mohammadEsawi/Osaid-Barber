@@ -1,4 +1,33 @@
+# VS Code AI rules
+.github/instructions/codacy.instructions.md
 
+# Dependencies
+node_modules/
+**/node_modules/
 
-#Ignore vscode AI rules
-.github\instructions\codacy.instructions.md
+# Environment files
+backend/.env
+!backend/.env.example
+
+# Build outputs
+frontend/dist/
+frontend/.vite/
+
+# Logs
+*.log
+npm-debug.log*
+
+# PostgreSQL
+pgdata/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# IDE
+.vscode/settings.json
+.idea/

@@ -123,7 +123,7 @@ export default function AdminSettings() {
           <div className="card">
             <h2 className="text-white font-bold text-lg mb-4">إعدادات الحجز</h2>
             <div className="space-y-4">
-              <FormInput label="مدة الفتحة الزمنية (دقيقة)" type="number" value={form.slot_duration_minutes} onChange={set('slot_duration_minutes')} min="15" step="15" />
+              <FormInput label="مدة الحلقة الزمنية (دقيقة)" type="number" value={form.slot_duration_minutes} onChange={set('slot_duration_minutes')} min="15" step="15" />
               <FormInput label="مهلة إلغاء الموعد (ساعات)" type="number" value={form.booking_cancellation_hours} onChange={set('booking_cancellation_hours')} min="0" />
             </div>
           </div>

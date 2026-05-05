@@ -1,8 +1,3 @@
-/**
- * Run: node database/seed.js
- * Inserts default admin, barbers, services, and products.
- * Password for all seeded users: Admin@123
- */
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const { Pool } = require('pg');
@@ -18,18 +13,18 @@ const pool = new Pool({
 async function seed() {
   const client = await pool.connect();
   try {
-    const hash = await bcrypt.hash('Admin@123', 12);
+    const hash = await bcrypt.hash('Admin@123456789', 12);
     console.log('Seeding database...');
 
     // Admin
     await client.query(`
       INSERT INTO users (full_name, email, phone, password_hash, role)
       VALUES ($1,$2,$3,$4,$5) ON CONFLICT (email) DO NOTHING
-    `, ['أحمد الأدمن', 'admin@osaidbarber.com', '+972515718974', hash, 'admin']);
+    `, [' أسيد دويكات', 'Osaiddwikat148@gmail.com', '+972515718974', hash, 'admin']);
 
     // Barbers
     const barberData = [
-      { name: 'أسيد دويكات', email: 'osaid@osaidbarber.com', phone: '+972509000001', bio: 'حلاق محترف بخبرة 8 سنوات في تصفيف الشعر وتشكيل اللحى', exp: 8 },
+      { name: 'أسيد دويكات', email: 'osaid@osaidbarber.com', phone: '+972509000001', bio: 'حلاق محترف بخبرة 3 سنوات في تصفيف الشعر وتشكيل اللحى', exp: 8 },
       { name: 'أنس دويكات',  email: 'anas@osaidbarber.com',  phone: '+972509000002', bio: 'متخصص في قصات الشعر العصرية والكلاسيكية مع خبرة 5 سنوات', exp: 5 },
     ];
 
@@ -70,7 +65,7 @@ async function seed() {
     ];
     for (const [name, desc, price, duration] of services) {
       await client.query(
-        `INSERT INTO services (name, description, price, duration_minutes) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`,
+        `INSERT INTO services (name, description, price, duration_minutes) VALUES ($1,$2,$3,$4) ON CONFLICT (name) DO UPDATE SET price=$3, duration_minutes=$4`,
         [name, desc, price, duration]
       );
     }
@@ -88,14 +83,14 @@ async function seed() {
     ];
     for (const [name, desc, price, stock, cat] of products) {
       await client.query(
-        `INSERT INTO products (name, description, price, stock_quantity, category) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING`,
+        `INSERT INTO products (name, description, price, stock_quantity, category) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (name) DO UPDATE SET price=$3`,
         [name, desc, price, stock, cat]
       );
     }
 
     // Settings
     const settingsEntries = [
-      ['shop_name', 'أوسيد باربر'],
+      ['shop_name','صالون أسيد'],
       ['shop_phone', '+972 515718974'],
       ['shop_email', 'info@osaidbarber.com'],
       ['shop_address', 'بيتا الفوقا - نابلس'],

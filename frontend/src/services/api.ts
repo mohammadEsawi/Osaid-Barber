@@ -54,7 +54,7 @@ export const barbersApi = {
   uploadImage: (id: number, file: File) => {
     const fd = new FormData();
     fd.append('image', file);
-    return api.post(`/barbers/${id}/image`, fd);
+    return api.post(`/barbers/${id}/image`, fd, { headers: { 'Content-Type': undefined } });
   },
   updateAvailability: (id: number, data: object) => api.put(`/barbers/${id}/availability`, data),
   addUnavailableSlot: (id: number, data: object) => api.post(`/barbers/${id}/unavailable-slots`, data),
@@ -85,7 +85,7 @@ export const productsApi = {
   uploadImage: (file: File) => {
     const fd = new FormData();
     fd.append('image', file);
-    return api.post('/products/upload', fd);
+    return api.post('/products/upload', fd, { headers: { 'Content-Type': undefined } });
   },
 };
 

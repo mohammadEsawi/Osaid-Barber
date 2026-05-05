@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Scissors, Phone, Mail, MapPin, Instagram, Twitter } from 'lucide-react';
+import { Scissors, Phone, Mail, MapPin } from 'lucide-react';
+import { FaInstagram, FaFacebook, FaTiktok } from 'react-icons/fa';
 
 export default function Footer() {
   return (
@@ -18,12 +19,22 @@ export default function Footer() {
               صالون حلاقة احترافي يقدم أفضل خدمات تصفيف الشعر والعناية باللحية بأيدي حلاقين متخصصين.
             </p>
             <div className="flex gap-3">
-              <a href="#" className="w-9 h-9 bg-zinc-800 hover:bg-amber-600 rounded-lg flex items-center justify-center transition-colors">
-                <Instagram size={16} className="text-zinc-400 hover:text-white" />
-              </a>
-              <a href="#" className="w-9 h-9 bg-zinc-800 hover:bg-amber-600 rounded-lg flex items-center justify-center transition-colors">
-                <Twitter size={16} className="text-zinc-400 hover:text-white" />
-              </a>
+              {[
+                { href: 'https://www.instagram.com/osaid.dwikat', icon: FaInstagram, label: 'انستقرام' },
+                { href: 'https://www.facebook.com/osaid.dwikat',  icon: FaFacebook,  label: 'فيسبوك'   },
+                { href: 'https://www.tiktok.com/@osaiddwikat1?_r=1&_t=ZS-966m9BoJpFx',   icon: FaTiktok,    label: 'تيك توك'  },
+              ].map(({ href, icon: Icon, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={label}
+                  className="w-9 h-9 bg-zinc-800 hover:bg-amber-600 rounded-lg flex items-center justify-center transition-colors"
+                >
+                  <Icon size={16} className="text-zinc-400" />
+                </a>
+              ))}
             </div>
           </div>
 
@@ -65,9 +76,11 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-zinc-800 pt-6 text-center text-zinc-500 text-sm">
-          <p>© {new Date().getFullYear()} محمد عيســاوي. جميع الحقوق محفوظة.</p>
-        </div>
+            <p className="text-sm text-zinc-400 text-center">
+              © {new Date().getFullYear()}{" "}
+              <span className="text-amber-500 font-medium">محمد عيســاوي</span>. 
+              جميع الحقوق محفوظة.
+            </p>
       </div>
     </footer>
   );
