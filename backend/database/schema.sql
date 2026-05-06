@@ -173,6 +173,10 @@ CREATE TABLE IF NOT EXISTS contact_messages (
 
 CREATE INDEX IF NOT EXISTS idx_contact_messages_is_read ON contact_messages(is_read);
 
+-- Unique indexes required for seed ON CONFLICT clauses
+CREATE UNIQUE INDEX IF NOT EXISTS idx_services_name ON services(name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_products_name ON products(name);
+
 -- Default settings
 INSERT INTO settings (key, value) VALUES
   ('shop_name', 'أوسيد باربر'),
