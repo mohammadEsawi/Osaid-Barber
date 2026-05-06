@@ -64,13 +64,15 @@ app.use("/api/reports", require("./routes/reports"));
 app.use("/api/messages", require("./routes/messages"));
 app.use("/api/settings", require("./routes/settings"));
 
-app.get("/api/health", (req, res) =>
-  res.json({
-    success: true,
-    message: "Server is running",
-    timestamp: new Date(),
-  }),
-);
+app.get("/api/health", async (req, res) => {
+  const { query } = require("./config/database");
+  try {
+    await query("SELECT 1");
+    res.json({ success: true, message: "Server is running", db: "connected", timestamp: new Date() });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "DB error", error: err.message, DATABASE_URL: process.env.DATABASE_URL ? "SET" : "NOT SET" });
+  }
+});
 
 // Error handling
 app.use(notFound);
