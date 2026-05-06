@@ -78,9 +78,27 @@ app.get("/api/health", async (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`✅ Osaid Barber API running on http://localhost:${PORT}`);
-});
+async function startServer() {
+  const { query } = require("./config/database");
+  const fs = require("fs");
 
+  try {
+    let schema = fs.readFileSync(path.join(__dirname, "..", "database", "schema.sql"), "utf8");
+    schema = schema
+      .split("\n")
+      .filter(line => !line.startsWith("CREATE DATABASE") && !line.startsWith("\\c"))
+      .join("\n");
+    await query(schema);
+    console.log("✅ Migrations applied.");
+  } catch (err) {
+    console.error("Migration error:", err.message);
+  }
+
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`✅ Osaid Barber API running on http://localhost:${PORT}`);
+  });
+}
+
+startServer();
 module.exports = app;
