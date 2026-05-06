@@ -4,7 +4,7 @@
   "description": "Osaid Barber Shop Backend API",
   "main": "src/index.js",
   "scripts": {
-    "start": "node database/migrate.js && node database/seed.js && node src/index.js",
+    "start": "node database/migrate.js && node src/index.js",
     "dev": "nodemon src/index.js",
     "db:migrate": "node database/migrate.js",
     "db:seed": "node database/seed.js"
