@@ -31,3 +31,6 @@ backend/uploads/*
 # IDE
 .vscode/settings.json
 .idea/
+
+# Root env
+.env
