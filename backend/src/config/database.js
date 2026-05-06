@@ -1,13 +1,28 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const isNeon = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('neon.tech');
+let dbUrl = process.env.DATABASE_URL || '';
+
+// Remove parameters not supported by pg (channel_binding, etc.)
+if (dbUrl) {
+  try {
+    const u = new URL(dbUrl);
+    u.searchParams.delete('channel_binding');
+    u.searchParams.delete('uselibpqcompat');
+    dbUrl = u.toString();
+  } catch (e) {
+    console.error('Failed to parse DATABASE_URL:', e.message);
+  }
+  console.log('DB host:', new URL(dbUrl).hostname);
+}
+
+const isNeon = dbUrl.includes('neon.tech');
 
 const pool = new Pool(
-  process.env.DATABASE_URL
+  dbUrl
     ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: isNeon ? { rejectUnauthorized: false } : false,
+        connectionString: dbUrl,
+        ssl: { rejectUnauthorized: false },
         max: 10,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 5000,
