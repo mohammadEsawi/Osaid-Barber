@@ -16,14 +16,19 @@ app.use(morgan("combined"));
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
+  "https://osaid-barber.vercel.app",
   ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(",").map(o => o.trim()) : []),
 ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-      callback(new Error("Not allowed by CORS"));
+      // Allow requests with no origin (mobile apps, curl, Render health checks)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      // Allow any vercel.app preview deployments
+      if (origin.endsWith(".vercel.app")) return callback(null, true);
+      callback(null, false);
     },
     credentials: true,
   }),
