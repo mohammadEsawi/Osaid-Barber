@@ -7,13 +7,23 @@ const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 
-const isNeon = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('neon.tech');
+let dbUrl = process.env.DATABASE_URL || '';
+if (dbUrl) {
+  try {
+    const u = new URL(dbUrl);
+    u.searchParams.delete('channel_binding');
+    u.searchParams.delete('uselibpqcompat');
+    dbUrl = u.toString();
+  } catch (e) {
+    console.error('Failed to parse DATABASE_URL:', e.message);
+  }
+}
 
 const pool = new Pool(
-  process.env.DATABASE_URL
+  dbUrl
     ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: isNeon ? { rejectUnauthorized: false } : false,
+        connectionString: dbUrl,
+        ssl: { rejectUnauthorized: false },
       }
     : {
         host: process.env.DB_HOST,
