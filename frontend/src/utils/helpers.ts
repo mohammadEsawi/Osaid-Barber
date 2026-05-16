@@ -17,6 +17,15 @@ export const formatTime = (timeStr: string): string => {
   return timeStr.substring(0, 5);
 };
 
+export const formatTimeArabic = (timeStr: string): string => {
+  if (!timeStr) return '';
+  const [hStr, mStr] = timeStr.substring(0, 5).split(':');
+  const h = parseInt(hStr);
+  const period = h < 12 ? 'ص' : 'م';
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${h12}:${mStr} ${period}`;
+};
+
 export const formatDateTime = (dateStr: string, timeStr?: string): string => {
   const date = formatDate(dateStr);
   if (!timeStr) return date;

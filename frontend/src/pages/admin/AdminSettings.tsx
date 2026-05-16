@@ -35,6 +35,8 @@ const DEFAULTS: SettingsMap = {
   stat_4_value: '4.9',   stat_4_label: 'تقييم العملاء',
   booking_cancellation_hours: '2',
   slot_duration_minutes: '30',
+  shop_open_time: '09:00',
+  shop_close_time: '21:00',
 };
 
 export default function AdminSettings() {
@@ -123,6 +125,16 @@ export default function AdminSettings() {
           <div className="card">
             <h2 className="text-white font-bold text-lg mb-4">إعدادات الحجز</h2>
             <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">وقت الفتح</label>
+                  <input type="time" value={form.shop_open_time} onChange={set('shop_open_time')} className="input-field" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">وقت الإغلاق</label>
+                  <input type="time" value={form.shop_close_time} onChange={set('shop_close_time')} className="input-field" />
+                </div>
+              </div>
               <FormInput label="مدة الحلقة الزمنية (دقيقة)" type="number" value={form.slot_duration_minutes} onChange={set('slot_duration_minutes')} min="15" step="15" />
               <FormInput label="مهلة إلغاء الموعد (ساعات)" type="number" value={form.booking_cancellation_hours} onChange={set('booking_cancellation_hours')} min="0" />
             </div>

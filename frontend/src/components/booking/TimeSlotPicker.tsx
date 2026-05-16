@@ -1,6 +1,7 @@
 import { Clock } from 'lucide-react';
 import { TimeSlot } from '../../types';
 import LoadingSpinner from '../ui/LoadingSpinner';
+import { formatTimeArabic } from '../../utils/helpers';
 
 interface Props {
   slots: TimeSlot[];
@@ -36,7 +37,7 @@ export default function TimeSlotPicker({ slots, selected, onSelect, isLoading }:
               : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white'
           }`}
         >
-          {slot.time.substring(0, 5)}
+          {formatTimeArabic(slot.time)}
         </button>
       ))}
     </div>

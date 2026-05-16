@@ -1,10 +1,9 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, ChevronLeft, ChevronRight, User, Scissors, Calendar, Clock } from 'lucide-react';
+import { CheckCircle, ChevronLeft, ChevronRight, User, Scissors, Calendar } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import ServiceCard from '../../components/ui/ServiceCard';
-import TimeSlotPicker from '../../components/booking/TimeSlotPicker';
 import { FormInput, FormTextarea } from '../../components/ui/FormInput';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useQuery } from '@tanstack/react-query';
@@ -12,16 +11,13 @@ import { servicesApi, barbersApi, appointmentsApi } from '../../services/api';
 import { Service, BarberProfile, TimeSlot } from '../../types';
 import toast from 'react-hot-toast';
 
-const STEPS = ['الخدمات', 'الحلاق', 'الموعد', 'البيانات'];
+const STEPS = ['الخدمات', 'الحلاق', 'التاريخ', 'البيانات'];
 
 export default function BookingPage() {
   const [step, setStep] = useState(0);
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [selectedBarber, setSelectedBarber] = useState<BarberProfile | null>(null);
   const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
-  const [slots, setSlots] = useState<TimeSlot[]>([]);
-  const [slotsLoading, setSlotsLoading] = useState(false);
   const [form, setForm] = useState({ customer_name: '', customer_phone: '', notes: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -49,26 +45,6 @@ export default function BookingPage() {
     );
   };
 
-  const fetchSlots = async (barberId: number, date: string, duration: number) => {
-    if (!barberId || !date || !duration) return;
-    setSlotsLoading(true);
-    try {
-      const res = await appointmentsApi.checkAvailability(barberId, date, duration);
-      setSlots(res.data.data || []);
-    } catch {
-      setSlots([]);
-    } finally {
-      setSlotsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (selectedBarber && selectedDate && totalDuration > 0) {
-      fetchSlots(selectedBarber.id, selectedDate, totalDuration);
-      setSelectedTime('');
-    }
-  }, [selectedBarber, selectedDate, totalDuration]);
-
   const minDate = new Date().toISOString().split('T')[0];
 
   const handleSubmit = async () => {
@@ -78,26 +54,30 @@ export default function BookingPage() {
     }
     setIsSubmitting(true);
     try {
+      // Auto-assign first available slot for the selected date
+      const slotsRes = await appointmentsApi.checkAvailability(selectedBarber!.id, selectedDate, totalDuration);
+      const availableSlots: TimeSlot[] = slotsRes.data.data || [];
+      const firstSlot = availableSlots.find(s => s.available);
+      if (!firstSlot) {
+        toast.error('لا توجد أوقات متاحة في هذا اليوم، يرجى اختيار يوم آخر');
+        setStep(2);
+        return;
+      }
+
       const res = await appointmentsApi.create({
         customer_name: form.customer_name,
         customer_phone: form.customer_phone,
         barber_id: selectedBarber!.id,
         appointment_date: selectedDate,
-        start_time: selectedTime,
+        start_time: firstSlot.time,
         service_ids: selectedServices.map(s => s.id),
         notes: form.notes,
       });
       toast.success('تم حجز موعدك بنجاح!');
       navigate('/booking/confirmation', { state: { appointment: res.data.data, services: selectedServices, barberName: selectedBarber?.full_name } });
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string; nextAvailableSlot?: string } } };
-      const msg = err.response?.data?.message || 'حدث خطأ في الحجز';
-      const nextSlot = err.response?.data?.nextAvailableSlot;
-      toast.error(msg);
-      if (nextSlot) {
-        toast(`الوقت التالي المتاح: ${nextSlot}`, { icon: '⏰' });
-        setSelectedTime(nextSlot);
-      }
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err.response?.data?.message || 'حدث خطأ في الحجز');
     } finally {
       setIsSubmitting(false);
     }
@@ -106,7 +86,7 @@ export default function BookingPage() {
   const canProceed = [
     selectedServices.length > 0,
     !!selectedBarber,
-    !!selectedDate && !!selectedTime,
+    !!selectedDate,
     !!form.customer_name && !!form.customer_phone,
   ][step];
 
@@ -134,7 +114,7 @@ export default function BookingPage() {
         </div>
 
         {/* Summary bar */}
-        {(selectedServices.length > 0 || selectedBarber || selectedTime) && (
+        {(selectedServices.length > 0 || selectedBarber || selectedDate) && (
           <div className="card mb-6 flex flex-wrap gap-4 text-sm">
             {selectedServices.length > 0 && (
               <div className="flex items-center gap-2 text-zinc-300">
@@ -149,10 +129,10 @@ export default function BookingPage() {
                 <span>{selectedBarber.full_name}</span>
               </div>
             )}
-            {selectedDate && selectedTime && (
+            {selectedDate && (
               <div className="flex items-center gap-2 text-zinc-300">
                 <Calendar size={15} className="text-amber-500" />
-                <span>{selectedDate} - {selectedTime.substring(0, 5)}</span>
+                <span>{selectedDate}</span>
               </div>
             )}
           </div>
@@ -208,7 +188,7 @@ export default function BookingPage() {
           </div>
         )}
 
-        {/* Step 2: Date & Time */}
+        {/* Step 2: Date only */}
         {step === 2 && (
           <div className="space-y-6">
             <div>
@@ -222,15 +202,12 @@ export default function BookingPage() {
                 onChange={e => setSelectedDate(e.target.value)}
                 className="input-field max-w-xs"
               />
+              {selectedDate && (
+                <p className="text-zinc-400 text-sm mt-3">
+                  سيتم تحديد أقرب وقت متاح تلقائياً عند تأكيد الحجز.
+                </p>
+              )}
             </div>
-            {selectedDate && (
-              <div>
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                  <Clock size={20} className="text-amber-500" /> اختر الوقت
-                </h2>
-                <TimeSlotPicker slots={slots} selected={selectedTime} onSelect={setSelectedTime} isLoading={slotsLoading} />
-              </div>
-            )}
           </div>
         )}
 

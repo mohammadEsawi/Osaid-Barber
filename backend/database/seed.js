@@ -121,6 +121,8 @@ async function seed() {
       ['stat_4_value', '4.9'],   ['stat_4_label', 'تقييم العملاء'],
       ['booking_cancellation_hours', '2'],
       ['slot_duration_minutes', '30'],
+      ['shop_open_time', '09:00'],
+      ['shop_close_time', '21:00'],
     ];
     for (const [key, value] of settingsEntries) {
       await client.query(
