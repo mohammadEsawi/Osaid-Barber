@@ -1,24 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, ChevronLeft, ChevronRight, User, Scissors, Calendar } from 'lucide-react';
+import { CheckCircle, ChevronLeft, ChevronRight, User, Scissors, Calendar, Clock } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import ServiceCard from '../../components/ui/ServiceCard';
 import DayPicker from '../../components/booking/DayPicker';
+import TimeSlotPicker from '../../components/booking/TimeSlotPicker';
 import { FormInput, FormTextarea } from '../../components/ui/FormInput';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useQuery } from '@tanstack/react-query';
 import { servicesApi, barbersApi, appointmentsApi } from '../../services/api';
 import { Service, BarberProfile, TimeSlot, BarberAvailability } from '../../types';
+import { formatTimeArabic } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
-const STEPS = ['الخدمات', 'الحلاق', 'التاريخ', 'البيانات'];
+const STEPS = ['الخدمات', 'الحلاق', 'الموعد', 'البيانات'];
 
 export default function BookingPage() {
   const [step, setStep] = useState(0);
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [selectedBarber, setSelectedBarber] = useState<BarberProfile | null>(null);
   const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
+  const [slots, setSlots] = useState<TimeSlot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
   const [form, setForm] = useState({ customer_name: '', customer_phone: '', notes: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -32,6 +37,7 @@ export default function BookingPage() {
     queryFn: () => barbersApi.getAvailability(selectedBarber!.id),
     enabled: !!selectedBarber,
   });
+
   const services: Service[] = servicesData?.data?.data || [];
   const barbers: BarberProfile[] = barbersData?.data?.data || [];
   const barberAvailability: BarberAvailability[] = availData?.data?.data || [];
@@ -52,6 +58,19 @@ export default function BookingPage() {
     );
   };
 
+  // Reset time when date or barber changes
+  useEffect(() => {
+    setSelectedTime('');
+    setSlots([]);
+    if (selectedBarber && selectedDate && totalDuration > 0) {
+      setSlotsLoading(true);
+      appointmentsApi.checkAvailability(selectedBarber.id, selectedDate, totalDuration)
+        .then(res => setSlots(res.data.data || []))
+        .catch(() => setSlots([]))
+        .finally(() => setSlotsLoading(false));
+    }
+  }, [selectedBarber?.id, selectedDate, totalDuration]);
+
   const handleSubmit = async () => {
     if (!form.customer_name || !form.customer_phone) {
       toast.error('يرجى إدخال الاسم ورقم الهاتف');
@@ -59,27 +78,19 @@ export default function BookingPage() {
     }
     setIsSubmitting(true);
     try {
-      // Auto-assign first available slot for the selected date
-      const slotsRes = await appointmentsApi.checkAvailability(selectedBarber!.id, selectedDate, totalDuration);
-      const availableSlots: TimeSlot[] = slotsRes.data.data || [];
-      const firstSlot = availableSlots.find(s => s.available);
-      if (!firstSlot) {
-        toast.error('لا توجد أوقات متاحة في هذا اليوم، يرجى اختيار يوم آخر');
-        setStep(2);
-        return;
-      }
-
       const res = await appointmentsApi.create({
         customer_name: form.customer_name,
         customer_phone: form.customer_phone,
         barber_id: selectedBarber!.id,
         appointment_date: selectedDate,
-        start_time: firstSlot.time,
+        start_time: selectedTime,
         service_ids: selectedServices.map(s => s.id),
         notes: form.notes,
       });
       toast.success('تم حجز موعدك بنجاح!');
-      navigate('/booking/confirmation', { state: { appointment: res.data.data, services: selectedServices, barberName: selectedBarber?.full_name } });
+      navigate('/booking/confirmation', {
+        state: { appointment: res.data.data, services: selectedServices, barberName: selectedBarber?.full_name },
+      });
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err.response?.data?.message || 'حدث خطأ في الحجز');
@@ -91,7 +102,7 @@ export default function BookingPage() {
   const canProceed = [
     selectedServices.length > 0,
     !!selectedBarber,
-    !!selectedDate,
+    !!selectedDate && !!selectedTime,
     !!form.customer_name && !!form.customer_phone,
   ][step];
 
@@ -103,7 +114,7 @@ export default function BookingPage() {
           <h1 className="section-title">احجز موعدك</h1>
         </div>
 
-        {/* Steps indicator */}
+        {/* Steps */}
         <div className="flex items-center justify-center mb-10 gap-0">
           {STEPS.map((s, i) => (
             <div key={i} className="flex items-center">
@@ -138,6 +149,9 @@ export default function BookingPage() {
               <div className="flex items-center gap-2 text-zinc-300">
                 <Calendar size={15} className="text-amber-500" />
                 <span>{selectedDate}</span>
+                {selectedTime && (
+                  <span className="text-amber-500 font-bold">{formatTimeArabic(selectedTime)}</span>
+                )}
               </div>
             )}
           </div>
@@ -145,7 +159,7 @@ export default function BookingPage() {
 
         {/* Step 0: Services */}
         {step === 0 && (
-          <div className="space-y-4">
+          <div>
             <h2 className="text-xl font-bold text-white mb-4">اختر الخدمة أو الخدمات</h2>
             {services.length === 0 ? <LoadingSpinner /> : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -193,25 +207,38 @@ export default function BookingPage() {
           </div>
         )}
 
-        {/* Step 2: Date picker */}
+        {/* Step 2: Date + Time */}
         {step === 2 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <Calendar size={20} className="text-amber-500" /> اختر اليوم
-            </h2>
-            {barberAvailability.length === 0 ? (
-              <div className="flex justify-center py-8"><LoadingSpinner /></div>
-            ) : (
-              <DayPicker
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                availability={barberAvailability}
-              />
-            )}
+          <div className="space-y-8">
+            {/* Day picker */}
+            <div>
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Calendar size={20} className="text-amber-500" /> اختر اليوم
+              </h2>
+              {barberAvailability.length === 0 ? (
+                <div className="flex justify-center py-6"><LoadingSpinner /></div>
+              ) : (
+                <DayPicker
+                  selected={selectedDate}
+                  onSelect={date => { setSelectedDate(date); setSelectedTime(''); }}
+                  availability={barberAvailability}
+                />
+              )}
+            </div>
+
+            {/* Time slots — appear after day is picked */}
             {selectedDate && (
-              <p className="text-zinc-400 text-sm text-center mt-2">
-                سيتم تحديد أقرب وقت متاح تلقائياً عند تأكيد الحجز
-              </p>
+              <div>
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <Clock size={20} className="text-amber-500" /> اختر الوقت
+                </h2>
+                <TimeSlotPicker
+                  slots={slots}
+                  selected={selectedTime}
+                  onSelect={setSelectedTime}
+                  isLoading={slotsLoading}
+                />
+              </div>
             )}
           </div>
         )}
