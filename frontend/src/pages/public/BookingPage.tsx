@@ -4,11 +4,12 @@ import { CheckCircle, ChevronLeft, ChevronRight, User, Scissors, Calendar } from
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import ServiceCard from '../../components/ui/ServiceCard';
+import DayPicker from '../../components/booking/DayPicker';
 import { FormInput, FormTextarea } from '../../components/ui/FormInput';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useQuery } from '@tanstack/react-query';
 import { servicesApi, barbersApi, appointmentsApi } from '../../services/api';
-import { Service, BarberProfile, TimeSlot } from '../../types';
+import { Service, BarberProfile, TimeSlot, BarberAvailability } from '../../types';
 import toast from 'react-hot-toast';
 
 const STEPS = ['الخدمات', 'الحلاق', 'التاريخ', 'البيانات'];
@@ -26,8 +27,14 @@ export default function BookingPage() {
 
   const { data: servicesData } = useQuery({ queryKey: ['services'], queryFn: () => servicesApi.getAll(true) });
   const { data: barbersData } = useQuery({ queryKey: ['barbers'], queryFn: () => barbersApi.getAll() });
+  const { data: availData } = useQuery({
+    queryKey: ['barber-availability', selectedBarber?.id],
+    queryFn: () => barbersApi.getAvailability(selectedBarber!.id),
+    enabled: !!selectedBarber,
+  });
   const services: Service[] = servicesData?.data?.data || [];
   const barbers: BarberProfile[] = barbersData?.data?.data || [];
+  const barberAvailability: BarberAvailability[] = availData?.data?.data || [];
 
   useEffect(() => {
     if (preSelectedBarber && barbers.length > 0) {
@@ -44,8 +51,6 @@ export default function BookingPage() {
       prev.find(s => s.id === service.id) ? prev.filter(s => s.id !== service.id) : [...prev, service]
     );
   };
-
-  const minDate = new Date().toISOString().split('T')[0];
 
   const handleSubmit = async () => {
     if (!form.customer_name || !form.customer_phone) {
@@ -188,26 +193,26 @@ export default function BookingPage() {
           </div>
         )}
 
-        {/* Step 2: Date only */}
+        {/* Step 2: Date picker */}
         {step === 2 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Calendar size={20} className="text-amber-500" /> اختر التاريخ
-              </h2>
-              <input
-                type="date"
-                min={minDate}
-                value={selectedDate}
-                onChange={e => setSelectedDate(e.target.value)}
-                className="input-field max-w-xs"
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Calendar size={20} className="text-amber-500" /> اختر اليوم
+            </h2>
+            {barberAvailability.length === 0 ? (
+              <div className="flex justify-center py-8"><LoadingSpinner /></div>
+            ) : (
+              <DayPicker
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                availability={barberAvailability}
               />
-              {selectedDate && (
-                <p className="text-zinc-400 text-sm mt-3">
-                  سيتم تحديد أقرب وقت متاح تلقائياً عند تأكيد الحجز.
-                </p>
-              )}
-            </div>
+            )}
+            {selectedDate && (
+              <p className="text-zinc-400 text-sm text-center mt-2">
+                سيتم تحديد أقرب وقت متاح تلقائياً عند تأكيد الحجز
+              </p>
+            )}
           </div>
         )}
 
