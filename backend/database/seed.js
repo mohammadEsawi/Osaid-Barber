@@ -60,7 +60,7 @@ async function seed() {
       const barberId = barberRes.rows[0].id;
       // Default weekly availability: Sun–Thu 9–21, Fri off, Sat 10–17
       for (let day = 0; day <= 6; day++) {
-        const isAvail = day !== 5;
+        const isAvail = day !== 1; // Monday is weekly off day
         const start = day === 6 ? '10:00' : '09:00';
         const end   = day === 6 ? '17:00' : '21:00';
         await client.query(

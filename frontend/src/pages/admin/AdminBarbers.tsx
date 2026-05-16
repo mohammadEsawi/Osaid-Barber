@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Camera, LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarChart3, Settings, MessageSquare, Clock } from 'lucide-react';
+import { Plus, Pencil, Trash2, Camera, LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarChart3, Settings, MessageSquare, Clock, X, Ban } from 'lucide-react';
 import DashboardLayout from '../../components/common/DashboardLayout';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
@@ -26,14 +26,24 @@ const adminNav = [
 
 const DAY_NAMES = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 
+// Monday (1) is the weekly off day
 const DEFAULT_SCHEDULE: BarberAvailability[] = DAY_NAMES.map((_, i) => ({
   id: 0,
   barber_id: 0,
   day_of_week: i,
   start_time: i === 6 ? '10:00' : '09:00',
   end_time: i === 6 ? '17:00' : '21:00',
-  is_available: i !== 5,
+  is_available: i !== 1,
 }));
+
+interface UnavailableSlot {
+  id: number;
+  barber_id: number;
+  unavailable_date: string;
+  start_time: string;
+  end_time: string;
+  reason: string;
+}
 
 const emptyForm = { full_name: '', email: '', phone: '', password: '', bio: '', experience_years: '' };
 
@@ -53,7 +63,13 @@ export default function AdminBarbers() {
   const [schedule, setSchedule] = useState<BarberAvailability[]>(DEFAULT_SCHEDULE);
   const [isSavingAvail, setIsSavingAvail] = useState(false);
 
+  // Block a specific date
+  const [blockDate, setBlockDate] = useState('');
+  const [blockReason, setBlockReason] = useState('');
+  const [isAddingBlock, setIsAddingBlock] = useState(false);
+
   const qc = useQueryClient();
+  const today = new Date().toISOString().split('T')[0];
 
   const { data, isLoading } = useQuery({ queryKey: ['barbers-admin'], queryFn: () => barbersApi.getAll() });
   const barbers: BarberProfile[] = data?.data?.data || [];
@@ -63,6 +79,16 @@ export default function AdminBarbers() {
     queryFn: () => barbersApi.getAvailability(availBarber!.id),
     enabled: !!availBarber,
   });
+
+  const { data: slotsData } = useQuery({
+    queryKey: ['barber-blocked-dates', availBarber?.id],
+    queryFn: () => barbersApi.getUnavailableSlots(availBarber!.id),
+    enabled: !!availBarber,
+  });
+
+  const blockedDates: UnavailableSlot[] = (slotsData?.data?.data || []).filter(
+    (s: UnavailableSlot) => s.start_time === '00:00' || s.start_time === '00:00:00'
+  );
 
   useEffect(() => {
     if (availData?.data?.data?.length) {
@@ -88,11 +114,42 @@ export default function AdminBarbers() {
       toast.success('تم حفظ جدول العمل');
       qc.invalidateQueries({ queryKey: ['barber-availability'] });
       qc.invalidateQueries({ queryKey: ['barber-availability-admin'] });
-      setAvailBarber(null);
     } catch {
       toast.error('فشل حفظ جدول العمل');
     } finally {
       setIsSavingAvail(false);
+    }
+  };
+
+  const handleAddBlock = async () => {
+    if (!availBarber || !blockDate) return;
+    setIsAddingBlock(true);
+    try {
+      await barbersApi.addUnavailableSlot(availBarber.id, {
+        unavailable_date: blockDate,
+        start_time: '00:00',
+        end_time: '23:59',
+        reason: blockReason || 'عطلة',
+      });
+      toast.success('تم إغلاق اليوم');
+      qc.invalidateQueries({ queryKey: ['barber-blocked-dates', availBarber.id] });
+      setBlockDate('');
+      setBlockReason('');
+    } catch {
+      toast.error('فشل إغلاق اليوم');
+    } finally {
+      setIsAddingBlock(false);
+    }
+  };
+
+  const handleRemoveBlock = async (slotId: number) => {
+    if (!availBarber) return;
+    try {
+      await barbersApi.removeUnavailableSlot(availBarber.id, slotId);
+      toast.success('تم إلغاء الإغلاق');
+      qc.invalidateQueries({ queryKey: ['barber-blocked-dates', availBarber.id] });
+    } catch {
+      toast.error('فشل إلغاء الإغلاق');
     }
   };
 
@@ -177,7 +234,7 @@ export default function AdminBarbers() {
     { header: 'الحالة', render: (r: BarberProfile) => <span className={`badge ${r.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{r.is_active ? 'نشط' : 'معطل'}</span> },
     { header: 'إجراءات', render: (r: BarberProfile) => (
       <div className="flex gap-2">
-        <button onClick={() => { setSchedule(DEFAULT_SCHEDULE); setAvailBarber(r); }} title="جدول العمل" className="p-1.5 text-zinc-400 hover:text-amber-500 hover:bg-zinc-800 rounded-lg"><Clock size={14} /></button>
+        <button onClick={() => { setSchedule(DEFAULT_SCHEDULE); setBlockDate(''); setBlockReason(''); setAvailBarber(r); }} title="جدول العمل" className="p-1.5 text-zinc-400 hover:text-amber-500 hover:bg-zinc-800 rounded-lg"><Clock size={14} /></button>
         <button onClick={() => openEdit(r)} className="p-1.5 text-zinc-400 hover:text-amber-500 hover:bg-zinc-800 rounded-lg"><Pencil size={14} /></button>
         <button onClick={() => setDeleteTarget(r)} className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-zinc-800 rounded-lg"><Trash2 size={14} /></button>
       </div>
@@ -203,61 +260,109 @@ export default function AdminBarbers() {
         title={`جدول عمل — ${availBarber?.full_name}`}
         size="lg"
       >
-        <div className="space-y-2">
-          {/* Header */}
-          <div className="grid grid-cols-[1fr_80px_100px_16px_100px] gap-2 text-xs text-zinc-500 font-medium pb-1 border-b border-zinc-800">
-            <span>اليوم</span>
-            <span className="text-center">الحالة</span>
-            <span className="text-center">من</span>
-            <span />
-            <span className="text-center">إلى</span>
-          </div>
+        <div className="space-y-6">
 
-          {schedule.map(day => (
-            <div key={day.day_of_week} className={`grid grid-cols-[1fr_80px_100px_16px_100px] gap-2 items-center py-2 rounded-lg px-1 transition-colors ${!day.is_available ? 'opacity-50' : ''}`}>
-              <span className="text-white font-medium text-sm">{DAY_NAMES[day.day_of_week]}</span>
-
-              {/* Toggle */}
-              <button
-                type="button"
-                onClick={() => updateDay(day.day_of_week, 'is_available', !day.is_available)}
-                className={`text-xs font-semibold px-2 py-1 rounded-lg transition-colors ${
-                  day.is_available
-                    ? 'bg-green-500/20 text-green-400 hover:bg-red-500/20 hover:text-red-400'
-                    : 'bg-red-500/20 text-red-400 hover:bg-green-500/20 hover:text-green-400'
-                }`}
-              >
-                {day.is_available ? 'مفتوح' : 'مغلق'}
-              </button>
-
-              {/* Start time */}
-              <input
-                type="time"
-                value={day.start_time}
-                disabled={!day.is_available}
-                onChange={e => updateDay(day.day_of_week, 'start_time', e.target.value)}
-                className="input-field text-sm py-1.5 text-center disabled:opacity-30 disabled:cursor-not-allowed"
-              />
-
-              <span className="text-zinc-600 text-xs text-center">←</span>
-
-              {/* End time */}
-              <input
-                type="time"
-                value={day.end_time}
-                disabled={!day.is_available}
-                onChange={e => updateDay(day.day_of_week, 'end_time', e.target.value)}
-                className="input-field text-sm py-1.5 text-center disabled:opacity-30 disabled:cursor-not-allowed"
-              />
+          {/* ── Weekly schedule ── */}
+          <div>
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Clock size={15} className="text-amber-500" /> الجدول الأسبوعي
+            </h3>
+            <div className="space-y-1">
+              <div className="grid grid-cols-[1fr_80px_100px_16px_100px] gap-2 text-xs text-zinc-500 font-medium pb-1 border-b border-zinc-800">
+                <span>اليوم</span><span className="text-center">الحالة</span>
+                <span className="text-center">من</span><span />
+                <span className="text-center">إلى</span>
+              </div>
+              {schedule.map(day => (
+                <div key={day.day_of_week} className={`grid grid-cols-[1fr_80px_100px_16px_100px] gap-2 items-center py-1.5 rounded-lg px-1 ${!day.is_available ? 'opacity-40' : ''}`}>
+                  <span className="text-white font-medium text-sm">{DAY_NAMES[day.day_of_week]}</span>
+                  <button
+                    type="button"
+                    onClick={() => updateDay(day.day_of_week, 'is_available', !day.is_available)}
+                    className={`text-xs font-semibold px-2 py-1 rounded-lg transition-colors ${
+                      day.is_available
+                        ? 'bg-green-500/20 text-green-400 hover:bg-red-500/20 hover:text-red-400'
+                        : 'bg-red-500/20 text-red-400 hover:bg-green-500/20 hover:text-green-400'
+                    }`}
+                  >
+                    {day.is_available ? 'مفتوح' : 'مغلق'}
+                  </button>
+                  <input type="time" value={day.start_time} disabled={!day.is_available}
+                    onChange={e => updateDay(day.day_of_week, 'start_time', e.target.value)}
+                    className="input-field text-sm py-1.5 text-center disabled:opacity-30 disabled:cursor-not-allowed" />
+                  <span className="text-zinc-600 text-xs text-center">←</span>
+                  <input type="time" value={day.end_time} disabled={!day.is_available}
+                    onChange={e => updateDay(day.day_of_week, 'end_time', e.target.value)}
+                    className="input-field text-sm py-1.5 text-center disabled:opacity-30 disabled:cursor-not-allowed" />
+                </div>
+              ))}
             </div>
-          ))}
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800 mt-4">
-            <button onClick={() => setAvailBarber(null)} className="btn-ghost">إلغاء</button>
-            <button onClick={handleSaveAvailability} disabled={isSavingAvail} className="btn-primary flex items-center gap-2">
-              {isSavingAvail ? <><LoadingSpinner size="sm" />جاري الحفظ...</> : 'حفظ الجدول'}
-            </button>
+            <div className="flex justify-end mt-3">
+              <button onClick={handleSaveAvailability} disabled={isSavingAvail} className="btn-primary flex items-center gap-2 text-sm py-2">
+                {isSavingAvail ? <><LoadingSpinner size="sm" />جاري الحفظ...</> : 'حفظ الجدول'}
+              </button>
+            </div>
           </div>
+
+          {/* ── Block specific dates ── */}
+          <div className="border-t border-zinc-800 pt-5">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Ban size={15} className="text-red-400" /> إغلاق يوم محدد
+            </h3>
+
+            {/* Existing blocked dates */}
+            {blockedDates.length > 0 && (
+              <div className="space-y-2 mb-3">
+                {blockedDates.map(slot => (
+                  <div key={slot.id} className="flex items-center justify-between bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                    <div>
+                      <span className="text-white font-medium text-sm">{slot.unavailable_date}</span>
+                      {slot.reason && <span className="text-red-300 text-xs mr-2">— {slot.reason}</span>}
+                    </div>
+                    <button
+                      onClick={() => handleRemoveBlock(slot.id)}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg p-1 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add new blocked date */}
+            <div className="flex gap-2 items-end">
+              <div className="flex-shrink-0">
+                <label className="block text-xs text-zinc-500 mb-1">التاريخ</label>
+                <input
+                  type="date"
+                  min={today}
+                  value={blockDate}
+                  onChange={e => setBlockDate(e.target.value)}
+                  className="input-field text-sm py-1.5"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs text-zinc-500 mb-1">السبب (اختياري)</label>
+                <input
+                  type="text"
+                  placeholder="عطلة، مرض، ظروف طارئة..."
+                  value={blockReason}
+                  onChange={e => setBlockReason(e.target.value)}
+                  className="input-field text-sm py-1.5 w-full"
+                />
+              </div>
+              <button
+                onClick={handleAddBlock}
+                disabled={!blockDate || isAddingBlock}
+                className="btn-danger flex items-center gap-1.5 text-sm py-2 disabled:opacity-40 whitespace-nowrap"
+              >
+                {isAddingBlock ? <LoadingSpinner size="sm" /> : <Ban size={14} />}
+                إغلاق اليوم
+              </button>
+            </div>
+          </div>
+
         </div>
       </Modal>
 
@@ -271,12 +376,8 @@ export default function AdminBarbers() {
                   ? <img src={editingImageUrl} alt={editing.full_name} className="w-full h-full rounded-full object-cover border-2 border-zinc-600" />
                   : <div className="w-full h-full rounded-full bg-zinc-700 flex items-center justify-center text-3xl font-bold text-zinc-400">{editing.full_name?.charAt(0)}</div>
                 }
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  disabled={uploadingImage}
-                  className="absolute bottom-0 left-0 w-7 h-7 bg-amber-500 rounded-full flex items-center justify-center hover:bg-amber-400 transition-colors"
-                >
+                <button type="button" onClick={() => fileRef.current?.click()} disabled={uploadingImage}
+                  className="absolute bottom-0 left-0 w-7 h-7 bg-amber-500 rounded-full flex items-center justify-center hover:bg-amber-400 transition-colors">
                   {uploadingImage ? <div className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <Camera size={13} className="text-black" />}
                 </button>
               </div>
