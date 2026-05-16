@@ -11,6 +11,17 @@ const minutesToTime = (minutes) => {
   return `${h}:${m}`;
 };
 
+// Parse YYYY-MM-DD without timezone shift
+const parseDateLocal = (dateStr) => {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+
+const getSlotStep = async () => {
+  const result = await query("SELECT value FROM settings WHERE key = 'slot_duration_minutes'");
+  return result.rows.length > 0 ? parseInt(result.rows[0].value) || 30 : 30;
+};
+
 /**
  * Check if a time slot is available for a barber.
  * Returns { available: bool, conflictingAppointment?, nextAvailableSlot? }
@@ -21,7 +32,7 @@ const checkSlotAvailability = async (barberId, date, startTime, durationMinutes,
   const endTime = minutesToTime(endMins);
 
   // 1. Check barber's weekly availability
-  const dayOfWeek = new Date(date).getDay(); // 0=Sun, 6=Sat
+  const dayOfWeek = parseDateLocal(date).getDay(); // 0=Sun, 6=Sat
   const availResult = await query(
     'SELECT * FROM barber_availability WHERE barber_id = $1 AND day_of_week = $2 AND is_available = true',
     [barberId, dayOfWeek]
@@ -78,7 +89,8 @@ const checkSlotAvailability = async (barberId, date, startTime, durationMinutes,
 /**
  * Find the next available slot after a given time, within the same day.
  */
-const findNextAvailableSlot = async (barberId, date, afterTime, durationMinutes, workEndTime, step = 30) => {
+const findNextAvailableSlot = async (barberId, date, afterTime, durationMinutes, workEndTime) => {
+  const step = await getSlotStep();
   let currentMins = timeToMinutes(afterTime);
   const workEndMins = timeToMinutes(workEndTime);
 
@@ -111,15 +123,17 @@ const getBookedSlots = async (barberId, date) => {
 
 /**
  * Generate all available time slots for a barber on a given date.
+ * Step size is read from the slot_duration_minutes setting.
  */
-const getAvailableSlots = async (barberId, date, durationMinutes, step = 30) => {
-  const dayOfWeek = new Date(date).getDay();
+const getAvailableSlots = async (barberId, date, durationMinutes) => {
+  const dayOfWeek = parseDateLocal(date).getDay();
   const availResult = await query(
     'SELECT * FROM barber_availability WHERE barber_id = $1 AND day_of_week = $2 AND is_available = true',
     [barberId, dayOfWeek]
   );
   if (availResult.rows.length === 0) return [];
 
+  const step = await getSlotStep();
   const workSlot = availResult.rows[0];
   const slots = [];
   let currentMins = timeToMinutes(workSlot.start_time);
