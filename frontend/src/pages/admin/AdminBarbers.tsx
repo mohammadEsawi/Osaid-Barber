@@ -1,13 +1,14 @@
-﻿import { useState, useRef } from 'react';
-import { Plus, Pencil, Trash2, Camera, LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarChart3, Settings, MessageSquare } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Plus, Pencil, Trash2, Camera, LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarChart3, Settings, MessageSquare, Clock } from 'lucide-react';
 import DashboardLayout from '../../components/common/DashboardLayout';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { FormInput, FormTextarea } from '../../components/ui/FormInput';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { barbersApi } from '../../services/api';
-import { BarberProfile } from '../../types';
+import { BarberProfile, BarberAvailability } from '../../types';
 import toast from 'react-hot-toast';
 
 const adminNav = [
@@ -23,6 +24,17 @@ const adminNav = [
   { href: '/admin/settings', label: 'الإعدادات', icon: <Settings size={18} /> },
 ];
 
+const DAY_NAMES = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+const DEFAULT_SCHEDULE: BarberAvailability[] = DAY_NAMES.map((_, i) => ({
+  id: 0,
+  barber_id: 0,
+  day_of_week: i,
+  start_time: i === 6 ? '10:00' : '09:00',
+  end_time: i === 6 ? '17:00' : '21:00',
+  is_available: i !== 5,
+}));
+
 const emptyForm = { full_name: '', email: '', phone: '', password: '', bio: '', experience_years: '' };
 
 export default function AdminBarbers() {
@@ -35,10 +47,54 @@ export default function AdminBarbers() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [editingImageUrl, setEditingImageUrl] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Availability modal
+  const [availBarber, setAvailBarber] = useState<BarberProfile | null>(null);
+  const [schedule, setSchedule] = useState<BarberAvailability[]>(DEFAULT_SCHEDULE);
+  const [isSavingAvail, setIsSavingAvail] = useState(false);
+
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({ queryKey: ['barbers-admin'], queryFn: () => barbersApi.getAll() });
   const barbers: BarberProfile[] = data?.data?.data || [];
+
+  const { data: availData } = useQuery({
+    queryKey: ['barber-availability-admin', availBarber?.id],
+    queryFn: () => barbersApi.getAvailability(availBarber!.id),
+    enabled: !!availBarber,
+  });
+
+  useEffect(() => {
+    if (availData?.data?.data?.length) {
+      const fetched: BarberAvailability[] = availData.data.data;
+      setSchedule(
+        DEFAULT_SCHEDULE.map(def => {
+          const found = fetched.find(f => f.day_of_week === def.day_of_week);
+          return found ? { ...found } : def;
+        })
+      );
+    }
+  }, [availData]);
+
+  const updateDay = (dow: number, field: keyof BarberAvailability, value: string | boolean) => {
+    setSchedule(prev => prev.map(d => d.day_of_week === dow ? { ...d, [field]: value } : d));
+  };
+
+  const handleSaveAvailability = async () => {
+    if (!availBarber) return;
+    setIsSavingAvail(true);
+    try {
+      await barbersApi.updateAvailability(availBarber.id, { availability: schedule });
+      toast.success('تم حفظ جدول العمل');
+      qc.invalidateQueries({ queryKey: ['barber-availability'] });
+      qc.invalidateQueries({ queryKey: ['barber-availability-admin'] });
+      setAvailBarber(null);
+    } catch {
+      toast.error('فشل حفظ جدول العمل');
+    } finally {
+      setIsSavingAvail(false);
+    }
+  };
 
   const openAdd = () => { setEditing(null); setForm(emptyForm); setModalOpen(true); };
   const openEdit = (b: BarberProfile) => {
@@ -121,6 +177,7 @@ export default function AdminBarbers() {
     { header: 'الحالة', render: (r: BarberProfile) => <span className={`badge ${r.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{r.is_active ? 'نشط' : 'معطل'}</span> },
     { header: 'إجراءات', render: (r: BarberProfile) => (
       <div className="flex gap-2">
+        <button onClick={() => { setSchedule(DEFAULT_SCHEDULE); setAvailBarber(r); }} title="جدول العمل" className="p-1.5 text-zinc-400 hover:text-amber-500 hover:bg-zinc-800 rounded-lg"><Clock size={14} /></button>
         <button onClick={() => openEdit(r)} className="p-1.5 text-zinc-400 hover:text-amber-500 hover:bg-zinc-800 rounded-lg"><Pencil size={14} /></button>
         <button onClick={() => setDeleteTarget(r)} className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-zinc-800 rounded-lg"><Trash2 size={14} /></button>
       </div>
@@ -139,9 +196,74 @@ export default function AdminBarbers() {
         </div>
       </div>
 
+      {/* Availability modal */}
+      <Modal
+        isOpen={!!availBarber}
+        onClose={() => setAvailBarber(null)}
+        title={`جدول عمل — ${availBarber?.full_name}`}
+        size="lg"
+      >
+        <div className="space-y-2">
+          {/* Header */}
+          <div className="grid grid-cols-[1fr_80px_100px_16px_100px] gap-2 text-xs text-zinc-500 font-medium pb-1 border-b border-zinc-800">
+            <span>اليوم</span>
+            <span className="text-center">الحالة</span>
+            <span className="text-center">من</span>
+            <span />
+            <span className="text-center">إلى</span>
+          </div>
+
+          {schedule.map(day => (
+            <div key={day.day_of_week} className={`grid grid-cols-[1fr_80px_100px_16px_100px] gap-2 items-center py-2 rounded-lg px-1 transition-colors ${!day.is_available ? 'opacity-50' : ''}`}>
+              <span className="text-white font-medium text-sm">{DAY_NAMES[day.day_of_week]}</span>
+
+              {/* Toggle */}
+              <button
+                type="button"
+                onClick={() => updateDay(day.day_of_week, 'is_available', !day.is_available)}
+                className={`text-xs font-semibold px-2 py-1 rounded-lg transition-colors ${
+                  day.is_available
+                    ? 'bg-green-500/20 text-green-400 hover:bg-red-500/20 hover:text-red-400'
+                    : 'bg-red-500/20 text-red-400 hover:bg-green-500/20 hover:text-green-400'
+                }`}
+              >
+                {day.is_available ? 'مفتوح' : 'مغلق'}
+              </button>
+
+              {/* Start time */}
+              <input
+                type="time"
+                value={day.start_time}
+                disabled={!day.is_available}
+                onChange={e => updateDay(day.day_of_week, 'start_time', e.target.value)}
+                className="input-field text-sm py-1.5 text-center disabled:opacity-30 disabled:cursor-not-allowed"
+              />
+
+              <span className="text-zinc-600 text-xs text-center">←</span>
+
+              {/* End time */}
+              <input
+                type="time"
+                value={day.end_time}
+                disabled={!day.is_available}
+                onChange={e => updateDay(day.day_of_week, 'end_time', e.target.value)}
+                className="input-field text-sm py-1.5 text-center disabled:opacity-30 disabled:cursor-not-allowed"
+              />
+            </div>
+          ))}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800 mt-4">
+            <button onClick={() => setAvailBarber(null)} className="btn-ghost">إلغاء</button>
+            <button onClick={handleSaveAvailability} disabled={isSavingAvail} className="btn-primary flex items-center gap-2">
+              {isSavingAvail ? <><LoadingSpinner size="sm" />جاري الحفظ...</> : 'حفظ الجدول'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit/Add barber modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'تعديل بيانات الحلاق' : 'إضافة حلاق جديد'}>
         <form onSubmit={handleSave} className="space-y-4">
-          {/* Image upload — only when editing */}
           {editing && (
             <div className="flex flex-col items-center gap-3">
               <div className="relative w-20 h-20">
