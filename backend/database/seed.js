@@ -65,7 +65,9 @@ async function seed() {
         const end   = day === 6 ? '17:00' : '21:00';
         await client.query(
           `INSERT INTO barber_availability (barber_id, day_of_week, start_time, end_time, is_available)
-           VALUES ($1,$2,$3,$4,$5) ON CONFLICT (barber_id, day_of_week) DO NOTHING`,
+           VALUES ($1,$2,$3,$4,$5)
+           ON CONFLICT (barber_id, day_of_week) DO UPDATE
+             SET start_time=$3, end_time=$4, is_available=$5`,
           [barberId, day, start, end, isAvail]
         );
       }
