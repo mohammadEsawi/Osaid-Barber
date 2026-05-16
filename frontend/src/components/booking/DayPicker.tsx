@@ -61,7 +61,7 @@ export default function DayPicker({ selected, onSelect, availability }: Props) {
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {days.map(d => {
-          const dateStr = d.toISOString().split('T')[0];
+          const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
           const dow = d.getDay();
           const avail = availMap[dow];
           const isOff = !avail || !avail.is_available;
