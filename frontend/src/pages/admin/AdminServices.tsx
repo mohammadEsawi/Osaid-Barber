@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react';
-import { Plus, Pencil, Trash2, LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarChart3, Settings , MessageSquare } from 'lucide-react';
+import { Plus, Pencil, Trash2, LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarChart3, Settings, MessageSquare, Clock } from 'lucide-react';
 import DashboardLayout from '../../components/common/DashboardLayout';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
@@ -15,6 +15,7 @@ const adminNav = [
   { href: '/admin/bookings', label: 'المواعيد', icon: <Calendar size={18} /> },
   { href: '/admin/services', label: 'الخدمات', icon: <Scissors size={18} /> },
   { href: '/admin/barbers', label: 'الحلاقون', icon: <Users size={18} /> },
+  { href: '/admin/availability', label: 'أوقات العمل', icon: <Clock size={18} /> },
   { href: '/admin/products', label: 'المنتجات', icon: <Package size={18} /> },
   { href: '/admin/orders', label: 'الطلبات', icon: <ShoppingBag size={18} /> },
   { href: '/admin/customers', label: 'العملاء', icon: <Users size={18} /> },

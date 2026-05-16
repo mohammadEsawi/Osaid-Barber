@@ -15,6 +15,7 @@ const adminNav = [
   { href: '/admin/availability', label: 'أوقات العمل', icon: <Clock size={18} /> },
   { href: '/admin/products', label: 'المنتجات', icon: <Package size={18} /> },
   { href: '/admin/orders', label: 'الطلبات', icon: <ShoppingBag size={18} /> },
+  { href: '/admin/customers', label: 'العملاء', icon: <Users size={18} /> },
   { href: '/admin/reports', label: 'التقارير', icon: <BarChart3 size={18} /> },
   { href: '/admin/messages', label: 'الرسائل', icon: <MessageSquare size={18} /> },
   { href: '/admin/settings', label: 'الإعدادات', icon: <Settings size={18} /> },
