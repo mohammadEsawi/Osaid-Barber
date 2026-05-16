@@ -45,7 +45,7 @@ export default function BarberAvailability() {
     const raw: AvailabilityType[] = data?.data?.data || [];
     if (raw.length > 0) { setAvailability(raw); return; }
     // Default availability for all days
-    setAvailability(DAYS_AR.map((_, i) => ({ id: 0, barber_id: barberId || 0, day_of_week: i, start_time: '09:00', end_time: '21:00', is_available: i !== 5 })));
+    setAvailability(DAYS_AR.map((_, i) => ({ id: 0, barber_id: barberId || 0, day_of_week: i, start_time: i === 6 ? '10:00' : '09:00', end_time: i === 6 ? '17:00' : '21:00', is_available: i !== 1 })));
   }, [data, barberId]);
 
   const unavailableSlots = slotsData?.data?.data || [];
