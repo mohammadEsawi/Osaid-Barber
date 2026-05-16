@@ -53,7 +53,7 @@ exports.update = async (req, res) => {
 
 exports.remove = async (req, res) => {
   try {
-    const result = await query('DELETE FROM services WHERE id = $1 RETURNING id', [req.params.id]);
+    const result = await query('UPDATE services SET is_active = false WHERE id = $1 RETURNING id', [req.params.id]);
     if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'الخدمة غير موجودة' });
     res.json({ success: true, message: 'تم حذف الخدمة بنجاح' });
   } catch (error) {

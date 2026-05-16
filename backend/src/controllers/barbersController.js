@@ -47,12 +47,20 @@ exports.create = async (req, res) => {
       [userResult.rows[0].id, bio, experience_years]
     );
 
-    // Default availability Mon-Sat 9am-9pm
-    const days = [1, 2, 3, 4, 5, 6];
-    for (const day of days) {
+    // Default: Sun/Tue-Sat available, Mon off, Sat 10:00-17:00
+    const defaultDays = [
+      { day: 0, start: '09:00', end: '21:00', available: true  }, // الأحد
+      { day: 1, start: '09:00', end: '21:00', available: false }, // الاثنين - عطلة
+      { day: 2, start: '09:00', end: '21:00', available: true  },
+      { day: 3, start: '09:00', end: '21:00', available: true  },
+      { day: 4, start: '09:00', end: '21:00', available: true  },
+      { day: 5, start: '09:00', end: '21:00', available: true  },
+      { day: 6, start: '10:00', end: '17:00', available: true  }, // السبت
+    ];
+    for (const d of defaultDays) {
       await query(
         'INSERT INTO barber_availability (barber_id, day_of_week, start_time, end_time, is_available) VALUES ($1,$2,$3,$4,$5)',
-        [barberResult.rows[0].id, day, '09:00', '21:00', true]
+        [barberResult.rows[0].id, d.day, d.start, d.end, d.available]
       );
     }
 
