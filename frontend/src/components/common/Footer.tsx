@@ -98,7 +98,7 @@ export default function Footer() {
 
         <p className="text-sm text-zinc-400 text-center">
           © {new Date().getFullYear()}{" "}
-          <span className="text-amber-500 font-medium">محمد مراد عيســاوي</span>
+          <a href="https://www.facebook.com/mhmdEsawi003" target="_blank" rel="noopener noreferrer" className="text-amber-500 font-medium hover:text-amber-400 transition-colors">محمد مراد عيساوي</a>
           . جميع الحقوق محفوظة.
         </p>
       </div>
