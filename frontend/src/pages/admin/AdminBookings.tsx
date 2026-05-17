@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarChart3, Settings, Search, Filter, Eye, Plus, MessageSquare, Clock } from 'lucide-react';
+import { LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarChart3, Settings, Search, Filter, Eye, Plus, Trash2, MessageSquare, Clock } from 'lucide-react';
 import DashboardLayout from '../../components/common/DashboardLayout';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -45,6 +45,7 @@ export default function AdminBookings() {
   const [adminSlots, setAdminSlots] = useState<TimeSlot[]>([]);
   const [adminSlotsLoading, setAdminSlotsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -103,6 +104,21 @@ export default function AdminBookings() {
       toast.error(e.response?.data?.message || 'فشل إنشاء الموعد');
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الموعد؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+    setIsDeleting(true);
+    try {
+      await appointmentsApi.delete(id);
+      toast.success('تم حذف الموعد بنجاح');
+      qc.invalidateQueries({ queryKey: ['appointments'] });
+      setSelected(null);
+    } catch {
+      toast.error('فشل حذف الموعد');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -289,6 +305,17 @@ export default function AdminBookings() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="pt-4 border-t border-zinc-800 flex justify-end">
+              <button
+                onClick={() => handleDelete(selected.id)}
+                disabled={isDeleting}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-950/60 text-red-400 hover:bg-red-900/60 hover:text-red-300 text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                {isDeleting ? <LoadingSpinner size="sm" /> : <Trash2 size={15} />}
+                حذف الموعد
+              </button>
             </div>
           </div>
         )}
