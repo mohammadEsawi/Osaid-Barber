@@ -42,7 +42,9 @@ const checkSlotAvailability = async (barberId, date, startTime, durationMinutes,
   }
 
   const workSlot = availResult.rows[0];
-  if (startTime < workSlot.start_time || endTime > workSlot.end_time) {
+  const workStartMins = timeToMinutes(workSlot.start_time);
+  const workEndMins = timeToMinutes(workSlot.end_time);
+  if (startMins < workStartMins || endMins > workEndMins) {
     return { available: false, reason: 'الوقت المطلوب خارج ساعات العمل' };
   }
 
