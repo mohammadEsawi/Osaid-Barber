@@ -29,7 +29,12 @@ exports.getAll = async (req, res) => {
     const total = parseInt(countResult.rows[0].count);
 
     const result = await query(`
-      SELECT a.*, b.id as barber_db_id, u.full_name as barber_name,
+      SELECT a.id, a.customer_name, a.customer_phone, a.barber_id,
+             TO_CHAR(a.appointment_date, 'YYYY-MM-DD') as appointment_date,
+             TO_CHAR(a.start_time, 'HH24:MI') as start_time,
+             TO_CHAR(a.end_time, 'HH24:MI') as end_time,
+             a.total_duration, a.total_price, a.status, a.notes, a.created_at,
+             b.id as barber_db_id, u.full_name as barber_name,
              COALESCE(json_agg(json_build_object('id',s.id,'name',s.name,'price',aps.price_at_booking,'duration',aps.duration_at_booking)) FILTER (WHERE s.id IS NOT NULL), '[]') as services
       FROM appointments a
       LEFT JOIN barbers b ON a.barber_id = b.id
@@ -38,7 +43,7 @@ exports.getAll = async (req, res) => {
       LEFT JOIN services s ON aps.service_id = s.id
       ${where}
       GROUP BY a.id, b.id, u.full_name
-      ORDER BY a.appointment_date DESC, a.start_time DESC
+      ORDER BY a.appointment_date ASC, a.start_time ASC
       LIMIT $${idx++} OFFSET $${idx++}
     `, [...params, limit, offset]);
 
@@ -52,7 +57,12 @@ exports.getAll = async (req, res) => {
 exports.getById = async (req, res) => {
   try {
     const result = await query(`
-      SELECT a.*, u.full_name as barber_name,
+      SELECT a.id, a.customer_name, a.customer_phone, a.barber_id,
+             TO_CHAR(a.appointment_date, 'YYYY-MM-DD') as appointment_date,
+             TO_CHAR(a.start_time, 'HH24:MI') as start_time,
+             TO_CHAR(a.end_time, 'HH24:MI') as end_time,
+             a.total_duration, a.total_price, a.status, a.notes, a.created_at,
+             u.full_name as barber_name,
              COALESCE(json_agg(json_build_object('id',s.id,'name',s.name,'price',aps.price_at_booking,'duration',aps.duration_at_booking)) FILTER (WHERE s.id IS NOT NULL), '[]') as services
       FROM appointments a
       LEFT JOIN barbers b ON a.barber_id = b.id
@@ -197,7 +207,12 @@ exports.getByPhone = async (req, res) => {
     if (!phone) return res.status(400).json({ success: false, message: 'رقم الهاتف مطلوب' });
 
     const result = await query(`
-      SELECT a.*, u.full_name as barber_name,
+      SELECT a.id, a.customer_name, a.customer_phone, a.barber_id,
+             TO_CHAR(a.appointment_date, 'YYYY-MM-DD') as appointment_date,
+             TO_CHAR(a.start_time, 'HH24:MI') as start_time,
+             TO_CHAR(a.end_time, 'HH24:MI') as end_time,
+             a.total_duration, a.total_price, a.status, a.notes, a.created_at,
+             u.full_name as barber_name,
              COALESCE(json_agg(json_build_object('id',s.id,'name',s.name,'price',aps.price_at_booking)) FILTER (WHERE s.id IS NOT NULL), '[]') as services
       FROM appointments a
       LEFT JOIN barbers b ON a.barber_id = b.id
@@ -205,7 +220,7 @@ exports.getByPhone = async (req, res) => {
       LEFT JOIN appointment_services aps ON a.id = aps.appointment_id
       LEFT JOIN services s ON aps.service_id = s.id
       WHERE a.customer_phone = $1
-      GROUP BY a.id, u.full_name ORDER BY a.appointment_date DESC
+      GROUP BY a.id, u.full_name ORDER BY a.appointment_date ASC, a.start_time ASC
     `, [phone]);
 
     res.json({ success: true, data: result.rows });

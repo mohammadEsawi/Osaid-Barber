@@ -7,6 +7,7 @@ import Modal from '../../components/ui/Modal';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { appointmentsApi } from '../../services/api';
 import { Appointment, AppointmentStatus, STATUS_LABELS } from '../../types';
+import { formatDate, formatTimeArabic } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const barberNav = [
@@ -40,7 +41,7 @@ export default function BarberAppointments() {
 
   const columns = [
     { header: 'العميل', render: (r: Appointment) => <div><div className="text-white font-medium">{r.customer_name}</div><div className="text-zinc-400 text-xs">{r.customer_phone}</div></div> },
-    { header: 'التاريخ والوقت', render: (r: Appointment) => <div><div className="text-zinc-300">{r.appointment_date}</div><div className="text-amber-500 text-sm font-medium">{r.start_time?.substring(0, 5)}</div></div> },
+    { header: 'التاريخ والوقت', render: (r: Appointment) => <div><div className="text-zinc-300 text-sm">{formatDate(r.appointment_date)}</div><div className="text-amber-500 text-xs font-medium">{formatTimeArabic(r.start_time)}</div></div> },
     { header: 'المدة', render: (r: Appointment) => <span>{r.total_duration} دقيقة</span> },
     { header: 'المبلغ', render: (r: Appointment) => <span className="text-amber-500 font-bold">{r.total_price} ₪</span> },
     { header: 'الحالة', render: (r: Appointment) => <StatusBadge status={r.status} /> },
@@ -75,8 +76,8 @@ export default function BarberAppointments() {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div><span className="text-zinc-400">العميل: </span><span className="text-white">{selected.customer_name}</span></div>
               <div><span className="text-zinc-400">الهاتف: </span><span className="text-white">{selected.customer_phone}</span></div>
-              <div><span className="text-zinc-400">التاريخ: </span><span className="text-white">{selected.appointment_date}</span></div>
-              <div><span className="text-zinc-400">الوقت: </span><span className="text-white">{selected.start_time?.substring(0, 5)} - {selected.end_time?.substring(0, 5)}</span></div>
+              <div><span className="text-zinc-400">التاريخ: </span><span className="text-white">{formatDate(selected.appointment_date)}</span></div>
+              <div><span className="text-zinc-400">الوقت: </span><span className="text-white">{formatTimeArabic(selected.start_time)} - {formatTimeArabic(selected.end_time)}</span></div>
               <div><span className="text-zinc-400">المبلغ: </span><span className="text-amber-500 font-bold">{selected.total_price} ₪</span></div>
               <div><span className="text-zinc-400">الحالة: </span><StatusBadge status={selected.status} /></div>
             </div>

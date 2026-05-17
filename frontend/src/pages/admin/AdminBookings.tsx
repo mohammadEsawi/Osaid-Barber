@@ -10,7 +10,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { appointmentsApi, servicesApi, barbersApi } from '../../services/api';
 import { Appointment, AppointmentStatus, STATUS_LABELS, Service, BarberProfile, TimeSlot } from '../../types';
-import { formatTimeArabic, validatePhone } from '../../utils/helpers';
+import { formatTimeArabic, formatDate, localTodayStr, validatePhone } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const adminNav = [
@@ -117,13 +117,13 @@ export default function AdminBookings() {
     }
   };
 
-  const minDate = new Date().toISOString().split('T')[0];
+  const minDate = localTodayStr();
 
   const columns = [
     { header: '#', accessor: 'id' as keyof Appointment, width: 'w-12' },
     { header: 'العميل', render: (r: Appointment) => <div><div className="text-white font-medium">{r.customer_name}</div><div className="text-zinc-400 text-xs">{r.customer_phone}</div></div> },
     { header: 'الحلاق', accessor: 'barber_name' as keyof Appointment },
-    { header: 'التاريخ والوقت', render: (r: Appointment) => <span>{r.appointment_date} — {formatTimeArabic(r.start_time)}</span> },
+    { header: 'التاريخ والوقت', render: (r: Appointment) => <div><div className="text-white text-sm">{formatDate(r.appointment_date)}</div><div className="text-amber-400 text-xs">{formatTimeArabic(r.start_time)}</div></div> },
     { header: 'المبلغ', render: (r: Appointment) => <span className="text-amber-500 font-bold">{r.total_price} ₪</span> },
     { header: 'الحالة', render: (r: Appointment) => <StatusBadge status={r.status} /> },
     {
@@ -266,7 +266,7 @@ export default function AdminBookings() {
               <div><span className="text-zinc-400">العميل: </span><span className="text-white">{selected.customer_name}</span></div>
               <div><span className="text-zinc-400">الهاتف: </span><span className="text-white">{selected.customer_phone}</span></div>
               <div><span className="text-zinc-400">الحلاق: </span><span className="text-white">{selected.barber_name}</span></div>
-              <div><span className="text-zinc-400">التاريخ: </span><span className="text-white">{selected.appointment_date}</span></div>
+              <div><span className="text-zinc-400">التاريخ: </span><span className="text-white">{formatDate(selected.appointment_date)}</span></div>
               <div><span className="text-zinc-400">الوقت: </span><span className="text-white">{formatTimeArabic(selected.start_time)} - {formatTimeArabic(selected.end_time)}</span></div>
               <div><span className="text-zinc-400">المبلغ: </span><span className="text-amber-500 font-bold">{selected.total_price} ₪</span></div>
             </div>

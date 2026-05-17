@@ -5,11 +5,21 @@ export const CURRENCY = '₪';
 export const formatPrice = (price: number | string): string =>
   `${CURRENCY}${parseFloat(String(price)).toFixed(2)}`;
 
+const MONTHS_AR_LONG = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+// Safely extracts YYYY-MM-DD from both plain dates and ISO timestamps
+export const extractDate = (dateStr: string): string => dateStr?.substring(0, 10) ?? '';
+
 export const formatDate = (dateStr: string): string => {
-  if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('ar-SA', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  });
+  const clean = extractDate(dateStr);
+  if (!clean) return '';
+  const [y, m, d] = clean.split('-').map(Number);
+  return `${d} ${MONTHS_AR_LONG[m - 1]} ${y}`;
+};
+
+export const localTodayStr = (): string => {
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
 };
 
 export const formatTime = (timeStr: string): string => {
