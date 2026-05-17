@@ -237,6 +237,7 @@ export default function BookingPage() {
                   selected={selectedTime}
                   onSelect={setSelectedTime}
                   isLoading={slotsLoading}
+                  date={selectedDate}
                 />
               </div>
             )}

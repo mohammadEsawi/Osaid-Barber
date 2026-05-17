@@ -234,6 +234,7 @@ export default function AdminBookings() {
                 selected={newForm.start_time}
                 onSelect={t => setNewForm(f => ({ ...f, start_time: t }))}
                 isLoading={adminSlotsLoading}
+                date={newForm.appointment_date}
               />
             </div>
           )}

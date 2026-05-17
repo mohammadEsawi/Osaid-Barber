@@ -4,6 +4,7 @@ import { BarberAvailability } from '../../types';
 import { formatTimeArabic } from '../../utils/helpers';
 
 const DAY_NAMES = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
+const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
 interface Props {
   selected: string;
@@ -92,7 +93,7 @@ export default function DayPicker({ selected, onSelect, availability }: Props) {
                 {isToday ? <span className="text-sm">اليوم</span> : d.getDate()}
               </div>
               <div className="text-[10px] mt-0.5 opacity-60">
-                {d.toLocaleDateString('ar-SA', { month: 'short' })}
+                {MONTHS_AR[d.getMonth()]}
               </div>
               <div className={`text-[10px] mt-1 font-medium leading-tight ${isOff ? 'text-red-400' : isSelected ? 'text-white/90' : 'text-amber-400'}`}>
                 {isOff ? 'عطلة' : shortHours(avail)}
