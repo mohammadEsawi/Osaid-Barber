@@ -8,6 +8,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { appointmentsApi } from '../../services/api';
 import { Appointment } from '../../types';
 import toast from 'react-hot-toast';
+import { validatePhone } from '../../utils/helpers';
 
 export default function MyBookingPage() {
   const [phone, setPhone] = useState('');
@@ -19,6 +20,8 @@ export default function MyBookingPage() {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!phone) return;
+    const phoneErr = validatePhone(phone);
+    if (phoneErr) { toast.error(phoneErr); return; }
     setIsLoading(true);
     try {
       const res = await appointmentsApi.getByPhone(phone);

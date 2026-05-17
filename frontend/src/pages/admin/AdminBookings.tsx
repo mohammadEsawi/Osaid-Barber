@@ -10,7 +10,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { appointmentsApi, servicesApi, barbersApi } from '../../services/api';
 import { Appointment, AppointmentStatus, STATUS_LABELS, Service, BarberProfile, TimeSlot } from '../../types';
-import { formatTimeArabic } from '../../utils/helpers';
+import { formatTimeArabic, validatePhone } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const adminNav = [
@@ -88,6 +88,8 @@ export default function AdminBookings() {
       toast.error('يرجى تعبئة جميع الحقول المطلوبة واختيار وقت');
       return;
     }
+    const phoneErr = validatePhone(newForm.customer_phone);
+    if (phoneErr) { toast.error(phoneErr); return; }
     setIsCreating(true);
     try {
       await appointmentsApi.create(newForm);

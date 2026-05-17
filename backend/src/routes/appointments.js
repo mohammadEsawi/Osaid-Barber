@@ -14,7 +14,7 @@ router.get('/:id', appointmentsController.getById);
 router.post('/',
   [
     body('customer_name').notEmpty().withMessage('اسم العميل مطلوب'),
-    body('customer_phone').notEmpty().withMessage('رقم هاتف العميل مطلوب'),
+    body('customer_phone').matches(/^05\d{8}$/).withMessage('رقم الهاتف يجب أن يبدأ بـ 05 ويتكون من 10 أرقام'),
     body('barber_id').isInt().withMessage('يجب اختيار الحلاق'),
     body('appointment_date').isDate().withMessage('تاريخ الموعد غير صالح'),
     body('start_time').notEmpty().withMessage('وقت الموعد مطلوب'),

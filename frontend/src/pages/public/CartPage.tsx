@@ -8,6 +8,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useCart } from '../../contexts/CartContext';
 import { ordersApi } from '../../services/api';
 import toast from 'react-hot-toast';
+import { validatePhone } from '../../utils/helpers';
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart, total } = useCart();
@@ -21,6 +22,8 @@ export default function CartPage() {
       toast.error('يرجى إدخال الاسم ورقم الهاتف');
       return;
     }
+    const phoneErr = validatePhone(form.customer_phone);
+    if (phoneErr) { toast.error(phoneErr); return; }
     setIsSubmitting(true);
     try {
       await ordersApi.create({

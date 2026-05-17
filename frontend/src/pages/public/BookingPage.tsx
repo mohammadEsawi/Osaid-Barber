@@ -11,7 +11,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useQuery } from '@tanstack/react-query';
 import { servicesApi, barbersApi, appointmentsApi } from '../../services/api';
 import { Service, BarberProfile, TimeSlot, BarberAvailability } from '../../types';
-import { formatTimeArabic } from '../../utils/helpers';
+import { formatTimeArabic, validatePhone } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const STEPS = ['الخدمات', 'الحلاق', 'الموعد', 'البيانات'];
@@ -76,6 +76,8 @@ export default function BookingPage() {
       toast.error('يرجى إدخال الاسم ورقم الهاتف');
       return;
     }
+    const phoneErr = validatePhone(form.customer_phone);
+    if (phoneErr) { toast.error(phoneErr); return; }
     setIsSubmitting(true);
     try {
       const res = await appointmentsApi.create({

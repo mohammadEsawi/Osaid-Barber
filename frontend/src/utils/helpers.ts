@@ -67,3 +67,12 @@ export const truncate = (str: string, max = 60): string =>
 
 export const classNames = (...classes: (string | undefined | false | null)[]): string =>
   classes.filter(Boolean).join(' ');
+
+// Palestinian/Israeli mobile: starts with 05, exactly 10 digits
+export const validatePhone = (phone: string): string | null => {
+  const cleaned = phone.replace(/\s+/g, '');
+  if (!/^05\d{8}$/.test(cleaned)) {
+    return 'رقم الهاتف يجب أن يبدأ بـ 05 ويتكون من 10 أرقام';
+  }
+  return null;
+};

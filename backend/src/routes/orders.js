@@ -11,7 +11,7 @@ router.get('/:id', authenticate, authorize('admin'), ordersController.getById);
 router.post('/',
   [
     body('customer_name').notEmpty().withMessage('اسم العميل مطلوب'),
-    body('customer_phone').notEmpty().withMessage('رقم الهاتف مطلوب'),
+    body('customer_phone').matches(/^05\d{8}$/).withMessage('رقم الهاتف يجب أن يبدأ بـ 05 ويتكون من 10 أرقام'),
     body('items').isArray({ min: 1 }).withMessage('يجب إضافة منتج واحد على الأقل'),
     body('items.*.product_id').isInt().withMessage('معرّف المنتج غير صالح'),
     body('items.*.quantity').isInt({ min: 1 }).withMessage('الكمية يجب أن تكون رقماً موجباً'),
