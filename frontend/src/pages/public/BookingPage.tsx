@@ -58,6 +58,11 @@ export default function BookingPage() {
     );
   };
 
+  // Scroll to top on step change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [step]);
+
   // Reset time when date or barber changes
   useEffect(() => {
     setSelectedTime('');

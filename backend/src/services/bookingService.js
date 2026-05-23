@@ -125,26 +125,63 @@ const getBookedSlots = async (barberId, date) => {
 
 /**
  * Generate all available time slots for a barber on a given date.
- * Step size is read from the slot_duration_minutes setting.
+ * Uses 4 DB queries total regardless of slot count (previously O(n×3) queries).
  */
 const getAvailableSlots = async (barberId, date, durationMinutes) => {
   const dayOfWeek = parseDateLocal(date).getDay();
+
+  // Query 1: work hours for the day
   const availResult = await query(
-    'SELECT * FROM barber_availability WHERE barber_id = $1 AND day_of_week = $2 AND is_available = true',
+    `SELECT TO_CHAR(start_time,'HH24:MI') AS start_time, TO_CHAR(end_time,'HH24:MI') AS end_time
+     FROM barber_availability WHERE barber_id = $1 AND day_of_week = $2 AND is_available = true`,
     [barberId, dayOfWeek]
   );
   if (availResult.rows.length === 0) return [];
 
+  // Query 2: slot step setting
   const step = await getSlotStep();
-  const workSlot = availResult.rows[0];
-  const slots = [];
-  let currentMins = timeToMinutes(workSlot.start_time);
-  const endMins = timeToMinutes(workSlot.end_time);
 
-  while (currentMins + durationMinutes <= endMins) {
-    const candidateTime = minutesToTime(currentMins);
-    const result = await checkSlotAvailability(barberId, date, candidateTime, durationMinutes);
-    slots.push({ time: candidateTime, available: result.available });
+  // Query 3: all booked appointments for the day
+  const apptResult = await query(
+    `SELECT TO_CHAR(start_time,'HH24:MI') AS start_time, TO_CHAR(end_time,'HH24:MI') AS end_time
+     FROM appointments
+     WHERE barber_id = $1 AND appointment_date = $2 AND status NOT IN ('cancelled','no_show')`,
+    [barberId, date]
+  );
+
+  // Query 4: all unavailable slots for the day
+  const unavailResult = await query(
+    `SELECT TO_CHAR(start_time,'HH24:MI') AS start_time, TO_CHAR(end_time,'HH24:MI') AS end_time
+     FROM barber_unavailable_slots WHERE barber_id = $1 AND unavailable_date = $2`,
+    [barberId, date]
+  );
+
+  const workSlot = availResult.rows[0];
+  const workStartMins = timeToMinutes(workSlot.start_time);
+  const workEndMins = timeToMinutes(workSlot.end_time);
+  const bookedAppts = apptResult.rows;
+  const unavailSlots = unavailResult.rows;
+
+  // Check slot availability in memory — no more per-slot DB queries
+  const isBlocked = (slotStart, slotEnd) => {
+    for (const a of bookedAppts) {
+      const as = timeToMinutes(a.start_time);
+      const ae = timeToMinutes(a.end_time);
+      if (!(slotEnd <= as || slotStart >= ae)) return true;
+    }
+    for (const u of unavailSlots) {
+      const us = timeToMinutes(u.start_time);
+      const ue = timeToMinutes(u.end_time);
+      if (!(slotEnd <= us || slotStart >= ue)) return true;
+    }
+    return false;
+  };
+
+  const slots = [];
+  let currentMins = workStartMins;
+  while (currentMins + durationMinutes <= workEndMins) {
+    const slotEnd = currentMins + durationMinutes;
+    slots.push({ time: minutesToTime(currentMins), available: !isBlocked(currentMins, slotEnd) });
     currentMins += step;
   }
   return slots;
