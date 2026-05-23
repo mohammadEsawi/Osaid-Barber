@@ -8,7 +8,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { appointmentsApi } from '../../services/api';
 import { Appointment } from '../../types';
 import toast from 'react-hot-toast';
-import { validatePhone } from '../../utils/helpers';
+import { validatePhone, formatTimeArabic, formatDate } from '../../utils/helpers';
 
 export default function MyBookingPage() {
   const [phone, setPhone] = useState('');
@@ -112,11 +112,11 @@ export default function MyBookingPage() {
                     </div>
                     <div className="flex items-center gap-2 text-zinc-300">
                       <Calendar size={14} className="text-amber-500" />
-                      <span>{appt.appointment_date}</span>
+                      <span>{formatDate(appt.appointment_date)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-zinc-300">
                       <Clock size={14} className="text-amber-500" />
-                      <span>{appt.start_time?.substring(0, 5)} - {appt.end_time?.substring(0, 5)}</span>
+                      <span>{formatTimeArabic(appt.start_time)} - {formatTimeArabic(appt.end_time)}</span>
                     </div>
                     <div className="text-amber-500 font-bold">{appt.total_price} ₪</div>
                   </div>

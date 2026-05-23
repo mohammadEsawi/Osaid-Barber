@@ -1,6 +1,7 @@
 ﻿import { useLocation, Link } from 'react-router-dom';
 import { CheckCircle, Calendar, User, Clock, Phone, Home, Search } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
+import { formatTimeArabic, formatDate } from '../../utils/helpers';
 
 export default function BookingConfirmationPage() {
   const { state } = useLocation();
@@ -50,7 +51,7 @@ export default function BookingConfirmationPage() {
             <Calendar size={18} className="text-amber-500 shrink-0" />
             <div>
               <div className="text-zinc-400 text-xs">التاريخ</div>
-              <div className="text-white font-medium">{appointment.appointment_date}</div>
+              <div className="text-white font-medium">{formatDate(appointment.appointment_date)}</div>
             </div>
           </div>
 
@@ -58,7 +59,7 @@ export default function BookingConfirmationPage() {
             <Clock size={18} className="text-amber-500 shrink-0" />
             <div>
               <div className="text-zinc-400 text-xs">الوقت</div>
-              <div className="text-white font-medium">{appointment.start_time?.substring(0, 5)} - {appointment.end_time?.substring(0, 5)}</div>
+              <div className="text-white font-medium">{formatTimeArabic(appointment.start_time)} - {formatTimeArabic(appointment.end_time)}</div>
             </div>
           </div>
 
