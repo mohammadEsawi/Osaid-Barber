@@ -100,7 +100,13 @@ exports.remove = async (req, res) => {
 
 exports.getAvailability = async (req, res) => {
   try {
-    const result = await query('SELECT * FROM barber_availability WHERE barber_id = $1 ORDER BY day_of_week', [req.params.id]);
+    const result = await query(
+      `SELECT id, barber_id, day_of_week, is_available,
+              TO_CHAR(start_time, 'HH24:MI') AS start_time,
+              TO_CHAR(end_time,   'HH24:MI') AS end_time
+       FROM barber_availability WHERE barber_id = $1 ORDER BY day_of_week`,
+      [req.params.id]
+    );
     res.json({ success: true, data: result.rows });
   } catch (error) {
     res.status(500).json({ success: false, message: 'خطأ في الخادم' });

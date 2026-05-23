@@ -147,6 +147,9 @@ function BarberSchedulePanel({ barber }: { barber: BarberProfile }) {
                     onChange={e => updateDay(idx, 'end_time', e.target.value)}
                     className="input-field text-xs py-1 flex-1 text-center"
                   />
+                  <span className="text-[10px] font-mono text-amber-600 bg-zinc-900 px-1.5 py-0.5 rounded shrink-0 border border-zinc-700">
+                    {slot.start_time}—{slot.end_time}
+                  </span>
                 </div>
               ) : (
                 <span className="text-zinc-600 text-xs">مغلق</span>

@@ -109,6 +109,9 @@ export default function BarberAvailability() {
                     <input type="time" value={slot.end_time} onChange={e => {
                       const updated = [...availability]; updated[idx] = { ...slot, end_time: e.target.value }; setAvailability(updated);
                     }} className="input-field text-sm py-1.5 flex-1" />
+                    <span className="text-[10px] font-mono text-amber-600 bg-zinc-900 px-1.5 py-0.5 rounded shrink-0 border border-zinc-700">
+                      {slot.start_time}—{slot.end_time}
+                    </span>
                   </div>
                 ) : (
                   <span className="text-zinc-600 text-sm">يوم عطلة</span>
