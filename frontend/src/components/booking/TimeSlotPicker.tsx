@@ -24,19 +24,19 @@ const localDateStr = (d = new Date()) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 function groupSlots(slots: SlotWithState[]) {
-  const morning: SlotWithState[] = [];
-  const afternoon: SlotWithState[] = [];
-  const evening: SlotWithState[] = [];
+  const night: SlotWithState[] = [];   // 12ص – 8ص
+  const day: SlotWithState[] = [];     // 8ص – 4م
+  const evening: SlotWithState[] = []; // 4م – 12ل
   for (const s of slots) {
     const h = parseInt(s.time.split(':')[0]);
-    if (h < 12) morning.push(s);
-    else if (h < 17) afternoon.push(s);
+    if (h < 8) night.push(s);
+    else if (h < 16) day.push(s);
     else evening.push(s);
   }
   return [
-    { label: 'الصباح', icon: '🌅', slots: morning },
-    { label: 'بعد الظهر', icon: '☀️', slots: afternoon },
-    { label: 'المساء', icon: '🌙', slots: evening },
+    { label: 'فجر / ليل', icon: '🌙', slots: night },
+    { label: 'صباح / ظهر', icon: '☀️', slots: day },
+    { label: 'عصر / مساء', icon: '🌆', slots: evening },
   ].filter(g => g.slots.length > 0);
 }
 
