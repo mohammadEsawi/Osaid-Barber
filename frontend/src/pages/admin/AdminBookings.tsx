@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useMemo } from 'react';
-import { LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarChart3, Settings, Search, Filter, Eye, Plus, Trash2, MessageSquare, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarChart3, Settings, Search, Filter, Eye, Plus, Trash2, MessageSquare, Clock, ChevronLeft, ChevronRight, Archive } from 'lucide-react';
 import DashboardLayout from '../../components/common/DashboardLayout';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 const adminNav = [
   { href: '/admin', label: 'الرئيسية', icon: <LayoutDashboard size={18} /> },
   { href: '/admin/bookings', label: 'المواعيد', icon: <Calendar size={18} /> },
+  { href: '/admin/archive', label: 'الأرشيف', icon: <Archive size={18} /> },
   { href: '/admin/services', label: 'الخدمات', icon: <Scissors size={18} /> },
   { href: '/admin/barbers', label: 'الحلاقون', icon: <Users size={18} /> },
   { href: '/admin/availability', label: 'أوقات العمل', icon: <Clock size={18} /> },
@@ -50,7 +51,11 @@ export default function AdminBookings() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['appointments', filters],
-    queryFn: () => appointmentsApi.getAll({ status: filters.status || undefined, date: filters.date || undefined }),
+    queryFn: () => appointmentsApi.getAll({
+      status: filters.status || undefined,
+      date: filters.date || undefined,
+      exclude_status: filters.status ? undefined : 'completed',
+    }),
   });
   const appointments: Appointment[] = data?.data?.data || [];
 
@@ -58,7 +63,10 @@ export default function AdminBookings() {
   const [navIdx, setNavIdx] = useState(0);
   const { data: navData } = useQuery({
     queryKey: ['appointments-nav', filters.status],
-    queryFn: () => appointmentsApi.getAll({ status: filters.status || undefined }),
+    queryFn: () => appointmentsApi.getAll({
+      status: filters.status || undefined,
+      exclude_status: filters.status ? undefined : 'completed',
+    }),
     staleTime: 60 * 1000,
   });
   const allForNav: Appointment[] = navData?.data?.data || [];
@@ -202,7 +210,7 @@ export default function AdminBookings() {
           </div>
           <select value={filters.status} onChange={e => setFilters(f => ({ ...f, status: e.target.value }))} className="input-field w-48">
             <option value="">جميع الحالات</option>
-            {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            {Object.entries(STATUS_LABELS).filter(([k]) => k !== 'completed').map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
           <button onClick={() => setFilters({ status: '', date: '' })} className="btn-ghost flex items-center gap-2">
             <Filter size={16} />

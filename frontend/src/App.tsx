@@ -30,6 +30,7 @@ import AdminSettings from './pages/admin/AdminSettings';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminMessages from './pages/admin/AdminMessages';
 import AdminAvailability from './pages/admin/AdminAvailability';
+import AdminArchive from './pages/admin/AdminArchive';
 
 // Barber
 import BarberDashboard from './pages/barber/BarberDashboard';
@@ -81,6 +82,7 @@ const AppRoutes = () => {
       <Route path="/admin/reports" element={<ProtectedRoute roles={['admin']}><AdminReports /></ProtectedRoute>} />
       <Route path="/admin/messages" element={<ProtectedRoute roles={['admin']}><AdminMessages /></ProtectedRoute>} />
       <Route path="/admin/availability" element={<ProtectedRoute roles={['admin']}><AdminAvailability /></ProtectedRoute>} />
+      <Route path="/admin/archive" element={<ProtectedRoute roles={['admin']}><AdminArchive /></ProtectedRoute>} />
       <Route path="/admin/settings" element={<ProtectedRoute roles={['admin']}><AdminSettings /></ProtectedRoute>} />
 
       {/* Barber */}

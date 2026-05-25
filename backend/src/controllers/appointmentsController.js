@@ -3,7 +3,7 @@ const { checkSlotAvailability, getAvailableSlots, minutesToTime, timeToMinutes }
 
 exports.getAll = async (req, res) => {
   try {
-    const { status, date, barber_id, page = 1, limit = 20 } = req.query;
+    const { status, date, barber_id, exclude_status, page = 1, limit = 200 } = req.query;
     const offset = (page - 1) * limit;
 
     let conditions = [];
@@ -21,6 +21,7 @@ exports.getAll = async (req, res) => {
     }
 
     if (status) { conditions.push(`a.status = $${idx++}`); params.push(status); }
+    if (exclude_status) { conditions.push(`a.status != $${idx++}`); params.push(exclude_status); }
     if (date) { conditions.push(`a.appointment_date = $${idx++}`); params.push(date); }
 
     const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
