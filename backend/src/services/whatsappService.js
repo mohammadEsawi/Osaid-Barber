@@ -117,7 +117,11 @@ const DEFAULT_REMINDER =
 // ── رسالة تأكيد الحجز ────────────────────────────────────────────────────────
 const sendConfirmation = async ({ customerName, customerPhone, date, startTime, barberName, services, totalPrice, appointmentId }) => {
   try {
+    console.log('[WhatsApp] sendConfirmation called for', customerPhone);
+    console.log('[WhatsApp] INSTANCE:', INSTANCE || 'MISSING', '| TOKEN:', TOKEN ? TOKEN.substring(0, 6) + '...' : 'MISSING');
+
     const settings = await getWhatsAppSettings();
+    console.log('[WhatsApp] confirmationEnabled:', settings.confirmationEnabled);
     if (!settings.confirmationEnabled) return;
 
     const body = applyTemplate(settings.confirmationTemplate, {
