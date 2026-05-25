@@ -1,5 +1,5 @@
-﻿import { useState, useEffect } from 'react';
-import { LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarChart3, Settings, Search, Filter, Eye, Plus, Trash2, MessageSquare, Clock } from 'lucide-react';
+﻿import { useState, useEffect, useMemo } from 'react';
+import { LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarChart3, Settings, Search, Filter, Eye, Plus, Trash2, MessageSquare, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import DashboardLayout from '../../components/common/DashboardLayout';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -54,6 +54,43 @@ export default function AdminBookings() {
   });
   const appointments: Appointment[] = data?.data?.data || [];
 
+  // Separate query for day navigator — always all dates, no date filter
+  const [navIdx, setNavIdx] = useState(0);
+  const { data: navData } = useQuery({
+    queryKey: ['appointments-nav', filters.status],
+    queryFn: () => appointmentsApi.getAll({ status: filters.status || undefined }),
+    staleTime: 60 * 1000,
+  });
+  const allForNav: Appointment[] = navData?.data?.data || [];
+
+  const dateGroups = useMemo(() => {
+    const map: Record<string, Appointment[]> = {};
+    for (const a of allForNav) {
+      const d = (a.appointment_date || '').substring(0, 10);
+      if (!map[d]) map[d] = [];
+      map[d].push(a);
+    }
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, appts]) => ({ date, appts }));
+  }, [allForNav]);
+
+  // Sync navIdx when filters.date changes from the date input
+  useEffect(() => {
+    if (filters.date) {
+      const idx = dateGroups.findIndex(g => g.date === filters.date);
+      if (idx >= 0) setNavIdx(idx);
+    }
+  }, [filters.date, dateGroups]);
+
+  const goDay = (dir: -1 | 1) => {
+    const newIdx = Math.max(0, Math.min(dateGroups.length - 1, navIdx + dir));
+    setNavIdx(newIdx);
+    setFilters(f => ({ ...f, date: dateGroups[newIdx]?.date || '' }));
+  };
+
+  const activeGroup = dateGroups[navIdx];
+
   const { data: servicesData } = useQuery({ queryKey: ['services-all'], queryFn: () => servicesApi.getAll() });
   const { data: barbersData } = useQuery({ queryKey: ['barbers-all'], queryFn: () => barbersApi.getAll() });
   const allServices: Service[] = servicesData?.data?.data || [];
@@ -96,6 +133,7 @@ export default function AdminBookings() {
       await appointmentsApi.create(newForm);
       toast.success('تم إنشاء الموعد بنجاح');
       qc.invalidateQueries({ queryKey: ['appointments'] });
+      qc.invalidateQueries({ queryKey: ['appointments-nav'] });
       setShowNewModal(false);
       setNewForm(emptyNewForm);
       setAdminSlots([]);
@@ -114,6 +152,7 @@ export default function AdminBookings() {
       await appointmentsApi.delete(id);
       toast.success('تم حذف الموعد بنجاح');
       qc.invalidateQueries({ queryKey: ['appointments'] });
+      qc.invalidateQueries({ queryKey: ['appointments-nav'] });
       setSelected(null);
     } catch {
       toast.error('فشل حذف الموعد');
@@ -174,6 +213,46 @@ export default function AdminBookings() {
             حجز جديد
           </button>
         </div>
+
+        {/* Day navigator */}
+        {dateGroups.length > 0 && activeGroup && (
+          <div className="card">
+            <div className="flex items-center gap-3 mb-3">
+              <button
+                onClick={() => goDay(1)}
+                disabled={navIdx >= dateGroups.length - 1}
+                className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 transition-colors shrink-0"
+              >
+                <ChevronLeft size={16} className="text-zinc-400" />
+              </button>
+              <div className="flex-1 text-center">
+                <span className="text-zinc-400 text-sm">المواعيد — </span>
+                <span className="text-white font-bold text-sm">{formatDate(activeGroup.date)}</span>
+                <span className="text-amber-500 font-bold text-sm"> ({activeGroup.appts.length})</span>
+              </div>
+              <button
+                onClick={() => goDay(-1)}
+                disabled={navIdx <= 0}
+                className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 transition-colors shrink-0"
+              >
+                <ChevronRight size={16} className="text-zinc-400" />
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {activeGroup.appts.map(appt => (
+                <button
+                  key={appt.id}
+                  onClick={() => setSelected(appt)}
+                  className="flex flex-col items-end bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-amber-500/50 rounded-xl px-3 py-2 text-right transition-all"
+                >
+                  <span className="text-white text-sm font-medium">{appt.customer_name}</span>
+                  <span className="text-amber-400 text-xs">{formatTimeArabic(appt.start_time)}</span>
+                  <span className="text-zinc-500 text-xs">{appt.barber_name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="card p-0 overflow-hidden">
           <div className="p-4 border-b border-zinc-800">
