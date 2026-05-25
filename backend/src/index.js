@@ -94,6 +94,10 @@ async function startServer() {
     console.error("Migration error:", err.message);
   }
 
+  // تشغيل مهمة تذكيرات WhatsApp
+  const { startReminderJob } = require("./jobs/reminderJob");
+  await startReminderJob();
+
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
     console.log(`✅ Osaid Barber API running on http://localhost:${PORT}`);

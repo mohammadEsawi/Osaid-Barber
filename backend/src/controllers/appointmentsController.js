@@ -1,5 +1,6 @@
 const { query } = require('../config/database');
 const { checkSlotAvailability, getAvailableSlots, minutesToTime, timeToMinutes } = require('../services/bookingService');
+const { sendConfirmation } = require('../services/whatsappService');
 
 exports.getAll = async (req, res) => {
   try {
@@ -124,6 +125,23 @@ exports.create = async (req, res) => {
     }
 
     res.status(201).json({ success: true, message: 'تم حجز الموعد بنجاح', data: appt });
+
+    // إرسال تأكيد WhatsApp (fire-and-forget — لا يؤثر على الاستجابة)
+    const barberRes = await query(
+      'SELECT u.full_name FROM barbers b JOIN users u ON b.user_id = u.id WHERE b.id = $1',
+      [barber_id]
+    );
+    sendConfirmation({
+      customerName:  customer_name,
+      customerPhone: customer_phone,
+      date:          appointment_date,
+      startTime:     start_time,
+      barberName:    barberRes.rows[0]?.full_name || '',
+      services:      serviceResult.rows,
+      totalPrice,
+      appointmentId: appt.id,
+    });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'خطأ في الخادم' });
