@@ -172,9 +172,16 @@ export default function AdminBookings() {
   const updateStatus = async (id: number, status: AppointmentStatus) => {
     try {
       await appointmentsApi.updateStatus(id, status);
-      toast.success('تم تحديث الحالة');
       qc.invalidateQueries({ queryKey: ['appointments'] });
-      setSelected(prev => prev ? { ...prev, status } : null);
+      qc.invalidateQueries({ queryKey: ['appointments-nav'] });
+      qc.invalidateQueries({ queryKey: ['appointments-archive'] });
+      if (status === 'completed') {
+        toast.success('تم إكمال الموعد ونقله إلى الأرشيف');
+        setSelected(null);
+      } else {
+        toast.success('تم تحديث الحالة');
+        setSelected(prev => prev ? { ...prev, status } : null);
+      }
     } catch {
       toast.error('فشل تحديث الحالة');
     }
