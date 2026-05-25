@@ -20,7 +20,7 @@ const sendMessage = async (to, body) => {
     return;
   }
   const phone   = normalizePhone(to);
-  const payload = JSON.stringify({ token: TOKEN, to: phone, body });
+  const payload = new URLSearchParams({ token: TOKEN, to: phone, body }).toString();
 
   return new Promise((resolve, reject) => {
     const req = https.request(
@@ -29,14 +29,17 @@ const sendMessage = async (to, body) => {
         path:     `/${INSTANCE}/messages/chat`,
         method:   'POST',
         headers:  {
-          'Content-Type':   'application/json',
+          'Content-Type':   'application/x-www-form-urlencoded',
           'Content-Length': Buffer.byteLength(payload),
         },
       },
       (res) => {
         let data = '';
         res.on('data', (chunk) => (data += chunk));
-        res.on('end', () => resolve(data));
+        res.on('end', () => {
+          console.log('[WhatsApp] رد UltraMsg:', data);
+          resolve(data);
+        });
       }
     );
     req.on('error', reject);
