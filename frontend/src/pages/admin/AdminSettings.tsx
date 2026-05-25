@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarChart3, Settings, Save, MessageSquare, Clock, Archive } from 'lucide-react';
+import { LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarChart3, Settings, Save, MessageSquare, Clock, Archive, Smartphone, Eye } from 'lucide-react';
 import DashboardLayout from '../../components/common/DashboardLayout';
 import { FormInput, FormTextarea } from '../../components/ui/FormInput';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -24,6 +24,22 @@ const adminNav = [
 
 type SettingsMap = Record<string, string>;
 
+const DEFAULT_CONFIRMATION =
+  'مرحباً {name} 👋\nتم تأكيد حجزك في صالون أسيد ✅\n\n📅 {date}\n⏰ {time}\n💈 {barber}\n✂️ {services} — {price}₪\n\nرقم حجزك: #{id}';
+
+const DEFAULT_REMINDER =
+  'تذكير 🔔\nموعدك في صالون أسيد بعد 30 دقيقة!\n\n⏰ {time}\n💈 {barber}\n\nنراك قريباً ✂️';
+
+const VARS = [
+  { key: '{name}',     label: 'اسم العميل' },
+  { key: '{date}',     label: 'التاريخ' },
+  { key: '{time}',     label: 'الوقت' },
+  { key: '{barber}',   label: 'اسم الحلاق' },
+  { key: '{services}', label: 'الخدمات' },
+  { key: '{price}',    label: 'المبلغ' },
+  { key: '{id}',       label: 'رقم الحجز' },
+];
+
 const DEFAULTS: SettingsMap = {
   shop_name: 'أوسيد باربر',
   shop_phone: '+972 515718974',
@@ -39,6 +55,10 @@ const DEFAULTS: SettingsMap = {
   slot_duration_minutes: '30',
   shop_open_time: '09:00',
   shop_close_time: '21:00',
+  whatsapp_confirmation_enabled: 'true',
+  whatsapp_reminder_enabled: 'true',
+  whatsapp_confirmation_template: DEFAULT_CONFIRMATION,
+  whatsapp_reminder_template: DEFAULT_REMINDER,
 };
 
 export default function AdminSettings() {
@@ -139,6 +159,106 @@ export default function AdminSettings() {
               </div>
               <FormInput label="مدة الحلقة الزمنية (دقيقة)" type="number" value={form.slot_duration_minutes} onChange={set('slot_duration_minutes')} min="15" step="15" />
               <FormInput label="مهلة إلغاء الموعد (ساعات)" type="number" value={form.booking_cancellation_hours} onChange={set('booking_cancellation_hours')} min="0" />
+            </div>
+          </div>
+
+          {/* WhatsApp */}
+          <div className="card space-y-5">
+            <div className="flex items-center gap-3 pb-3 border-b border-zinc-800">
+              <div className="w-9 h-9 bg-green-500/15 rounded-xl flex items-center justify-center">
+                <Smartphone size={18} className="text-green-400" />
+              </div>
+              <div>
+                <h2 className="text-white font-bold text-lg leading-none">رسائل واتساب</h2>
+                <p className="text-zinc-500 text-xs mt-0.5">تحكم بالرسائل التلقائية للعملاء</p>
+              </div>
+            </div>
+
+            {/* المتغيرات المتاحة */}
+            <div className="bg-zinc-800/50 rounded-xl p-3">
+              <p className="text-zinc-400 text-xs mb-2 font-medium">المتغيرات المتاحة في الرسائل:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {VARS.map(v => (
+                  <span key={v.key} className="text-xs bg-zinc-900 border border-zinc-700 text-amber-400 px-2 py-0.5 rounded font-mono">
+                    {v.key} <span className="text-zinc-500">= {v.label}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* رسالة التأكيد */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-white font-medium text-sm">رسالة تأكيد الحجز (فورية)</label>
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, whatsapp_confirmation_enabled: f.whatsapp_confirmation_enabled === 'true' ? 'false' : 'true' }))}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${form.whatsapp_confirmation_enabled === 'true' ? 'bg-green-500' : 'bg-zinc-700'}`}
+                >
+                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.whatsapp_confirmation_enabled === 'true' ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
+              <textarea
+                value={form.whatsapp_confirmation_template}
+                onChange={set('whatsapp_confirmation_template')}
+                rows={6}
+                dir="rtl"
+                className="input-field w-full font-mono text-sm leading-relaxed resize-none"
+                disabled={form.whatsapp_confirmation_enabled !== 'true'}
+              />
+              {/* معاينة */}
+              {form.whatsapp_confirmation_enabled === 'true' && (
+                <details className="group">
+                  <summary className="flex items-center gap-1.5 text-xs text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors select-none">
+                    <Eye size={13} /> معاينة الرسالة
+                  </summary>
+                  <div className="mt-2 bg-[#0d1117] border border-zinc-800 rounded-xl p-3 text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed" dir="rtl">
+                    {form.whatsapp_confirmation_template
+                      .replace('{name}',     'أحمد محمد')
+                      .replace('{date}',     '27 مايو 2026')
+                      .replace('{time}',     '3:00 م')
+                      .replace('{barber}',   'أسيد دويكات')
+                      .replace('{services}', 'قص شعر + لحية')
+                      .replace('{price}',    '80')
+                      .replace('{id}',       '142')}
+                  </div>
+                </details>
+              )}
+            </div>
+
+            {/* رسالة التذكير */}
+            <div className="space-y-3 pt-4 border-t border-zinc-800">
+              <div className="flex items-center justify-between">
+                <label className="text-white font-medium text-sm">رسالة التذكير (قبل 30 دقيقة)</label>
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, whatsapp_reminder_enabled: f.whatsapp_reminder_enabled === 'true' ? 'false' : 'true' }))}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${form.whatsapp_reminder_enabled === 'true' ? 'bg-green-500' : 'bg-zinc-700'}`}
+                >
+                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.whatsapp_reminder_enabled === 'true' ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
+              <textarea
+                value={form.whatsapp_reminder_template}
+                onChange={set('whatsapp_reminder_template')}
+                rows={5}
+                dir="rtl"
+                className="input-field w-full font-mono text-sm leading-relaxed resize-none"
+                disabled={form.whatsapp_reminder_enabled !== 'true'}
+              />
+              {form.whatsapp_reminder_enabled === 'true' && (
+                <details className="group">
+                  <summary className="flex items-center gap-1.5 text-xs text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors select-none">
+                    <Eye size={13} /> معاينة الرسالة
+                  </summary>
+                  <div className="mt-2 bg-[#0d1117] border border-zinc-800 rounded-xl p-3 text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed" dir="rtl">
+                    {form.whatsapp_reminder_template
+                      .replace('{name}',   'أحمد محمد')
+                      .replace('{time}',   '3:00 م')
+                      .replace('{barber}', 'أسيد دويكات')}
+                  </div>
+                </details>
+              )}
             </div>
           </div>
 
