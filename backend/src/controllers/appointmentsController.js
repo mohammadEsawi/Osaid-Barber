@@ -82,7 +82,7 @@ exports.getById = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const { customer_name, customer_phone, barber_id, appointment_date, start_time, service_ids, notes } = req.body;
+    const { customer_name, customer_phone, barber_id, appointment_date, start_time, service_ids, notes, is_child } = req.body;
 
     // Fetch services
     const serviceResult = await query(
@@ -93,7 +93,8 @@ exports.create = async (req, res) => {
       return res.status(400).json({ success: false, message: 'بعض الخدمات المختارة غير متاحة' });
     }
 
-    const totalDuration = serviceResult.rows.reduce((sum, s) => sum + s.duration_minutes, 0);
+    const serviceDuration = serviceResult.rows.reduce((sum, s) => sum + s.duration_minutes, 0);
+    const totalDuration = is_child ? 20 : serviceDuration;
     const totalPrice = serviceResult.rows.reduce((sum, s) => sum + parseFloat(s.price), 0);
     const endMins = timeToMinutes(start_time) + totalDuration;
     const end_time = minutesToTime(endMins);
@@ -110,9 +111,9 @@ exports.create = async (req, res) => {
 
     // Create appointment
     const apptResult = await query(
-      `INSERT INTO appointments (customer_name, customer_phone, barber_id, appointment_date, start_time, end_time, total_duration, total_price, notes, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending') RETURNING *`,
-      [customer_name, customer_phone, barber_id, appointment_date, start_time, end_time, totalDuration, totalPrice, notes]
+      `INSERT INTO appointments (customer_name, customer_phone, barber_id, appointment_date, start_time, end_time, total_duration, total_price, notes, status, is_child)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',$10) RETURNING *`,
+      [customer_name, customer_phone, barber_id, appointment_date, start_time, end_time, totalDuration, totalPrice, notes, !!is_child]
     );
     const appt = apptResult.rows[0];
 

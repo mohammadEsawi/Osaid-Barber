@@ -196,3 +196,7 @@ INSERT INTO settings (key, value) VALUES
   ('stat_4_value', '4.9'),
   ('stat_4_label', 'تقييم العملاء')
 ON CONFLICT (key) DO NOTHING;
+
+-- Migrations
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS is_child BOOLEAN DEFAULT FALSE;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reminder_sent BOOLEAN DEFAULT FALSE;
