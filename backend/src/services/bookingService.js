@@ -92,7 +92,6 @@ const checkSlotAvailability = async (barberId, date, startTime, durationMinutes,
  * Find the next available slot after a given time, within the same day.
  */
 const findNextAvailableSlot = async (barberId, date, afterTime, durationMinutes, workEndTime) => {
-  const step = await getSlotStep();
   let currentMins = timeToMinutes(afterTime);
   const workEndMins = timeToMinutes(workEndTime);
 
@@ -100,7 +99,7 @@ const findNextAvailableSlot = async (barberId, date, afterTime, durationMinutes,
     const candidateTime = minutesToTime(currentMins);
     const result = await checkSlotAvailability(barberId, date, candidateTime, durationMinutes);
     if (result.available) return candidateTime;
-    currentMins += step;
+    currentMins += durationMinutes;
   }
   return null;
 };
@@ -138,10 +137,7 @@ const getAvailableSlots = async (barberId, date, durationMinutes) => {
   );
   if (availResult.rows.length === 0) return [];
 
-  // Query 2: slot step setting
-  const step = await getSlotStep();
-
-  // Query 3: all booked appointments for the day
+  // Query 2: all booked appointments for the day
   const apptResult = await query(
     `SELECT TO_CHAR(start_time,'HH24:MI') AS start_time, TO_CHAR(end_time,'HH24:MI') AS end_time
      FROM appointments
@@ -149,7 +145,7 @@ const getAvailableSlots = async (barberId, date, durationMinutes) => {
     [barberId, date]
   );
 
-  // Query 4: all unavailable slots for the day
+  // Query 3: all unavailable slots for the day
   const unavailResult = await query(
     `SELECT TO_CHAR(start_time,'HH24:MI') AS start_time, TO_CHAR(end_time,'HH24:MI') AS end_time
      FROM barber_unavailable_slots WHERE barber_id = $1 AND unavailable_date = $2`,
@@ -177,12 +173,13 @@ const getAvailableSlots = async (barberId, date, durationMinutes) => {
     return false;
   };
 
+  // Step = duration of the requested service (dynamic per booking type)
   const slots = [];
   let currentMins = workStartMins;
   while (currentMins + durationMinutes <= workEndMins) {
     const slotEnd = currentMins + durationMinutes;
     slots.push({ time: minutesToTime(currentMins), available: !isBlocked(currentMins, slotEnd) });
-    currentMins += step;
+    currentMins += durationMinutes;
   }
   return slots;
 };
