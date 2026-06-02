@@ -200,3 +200,6 @@ ON CONFLICT (key) DO NOTHING;
 -- Migrations
 ALTER TABLE appointments ADD COLUMN IF NOT EXISTS is_child BOOLEAN DEFAULT FALSE;
 ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reminder_sent BOOLEAN DEFAULT FALSE;
+UPDATE services SET duration_minutes = 15 WHERE name = 'قص شعر الأطفال' AND duration_minutes != 15;
+INSERT INTO settings (key, value) VALUES ('slot_duration_minutes', '15')
+  ON CONFLICT (key) DO UPDATE SET value = '15' WHERE settings.value = '30';

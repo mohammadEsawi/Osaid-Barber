@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, ChevronLeft, ChevronRight, User, Scissors, Calendar, Clock, Baby, AlertTriangle } from 'lucide-react';
+import { CheckCircle, ChevronLeft, ChevronRight, User, Scissors, Calendar, Clock, AlertTriangle } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import ServiceCard from '../../components/ui/ServiceCard';
@@ -24,7 +24,6 @@ export default function BookingPage() {
   const [selectedTime, setSelectedTime] = useState('');
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
-  const [isChild, setIsChild] = useState(false);
   const [form, setForm] = useState({ customer_name: '', customer_phone: '', notes: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -50,8 +49,7 @@ export default function BookingPage() {
     }
   }, [preSelectedBarber, barbers]);
 
-  const serviceDuration = selectedServices.reduce((s, sv) => s + sv.duration_minutes, 0);
-  const totalDuration = isChild ? 20 : serviceDuration;
+  const totalDuration = selectedServices.reduce((s, sv) => s + sv.duration_minutes, 0);
   const totalPrice = selectedServices.reduce((s, sv) => s + sv.price, 0);
 
   const toggleService = (service: Service) => {
@@ -95,7 +93,6 @@ export default function BookingPage() {
         start_time: selectedTime,
         service_ids: selectedServices.map(s => s.id),
         notes: form.notes,
-        is_child: isChild,
       });
       toast.success('تم حجز موعدك بنجاح!');
       navigate('/booking/confirmation', {
@@ -146,7 +143,6 @@ export default function BookingPage() {
               <div className="flex items-center gap-2 text-zinc-300">
                 <Scissors size={15} className="text-amber-500" />
                 <span>{selectedServices.map(s => s.name).join('، ')}</span>
-                {isChild && <span className="text-blue-400 text-xs font-medium bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 rounded-full">طفل</span>}
                 <span className="text-amber-500 font-bold">({totalPrice} ₪ / {totalDuration} د)</span>
               </div>
             )}
@@ -170,45 +166,21 @@ export default function BookingPage() {
 
         {/* Step 0: Services */}
         {step === 0 && (
-          <div className="space-y-5">
-            <div>
-              <h2 className="text-xl font-bold text-white mb-4">اختر الخدمة أو الخدمات</h2>
-              {services.length === 0 ? <LoadingSpinner /> : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {services.map(service => (
-                    <ServiceCard
-                      key={service.id}
-                      service={service}
-                      selectable
-                      isSelected={!!selectedServices.find(s => s.id === service.id)}
-                      onSelect={toggleService}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Child toggle */}
-            <button
-              type="button"
-              onClick={() => setIsChild(v => !v)}
-              className={`w-full flex items-center justify-between gap-3 p-4 rounded-2xl border transition-all ${
-                isChild
-                  ? 'border-blue-500 bg-blue-500/10'
-                  : 'border-zinc-700 bg-zinc-900 hover:border-zinc-600'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Baby size={20} className={isChild ? 'text-blue-400' : 'text-zinc-500'} />
-                <div className="text-right">
-                  <p className={`font-medium text-sm ${isChild ? 'text-blue-300' : 'text-zinc-300'}`}>الحجز لطفل؟</p>
-                  <p className="text-zinc-500 text-xs">مدة الحلاقة 20 دقيقة بدل الوقت العادي</p>
-                </div>
+          <div>
+            <h2 className="text-xl font-bold text-white mb-4">اختر الخدمة أو الخدمات</h2>
+            {services.length === 0 ? <LoadingSpinner /> : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {services.map(service => (
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    selectable
+                    isSelected={!!selectedServices.find(s => s.id === service.id)}
+                    onSelect={toggleService}
+                  />
+                ))}
               </div>
-              <div className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${isChild ? 'bg-blue-500' : 'bg-zinc-700'}`}>
-                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isChild ? 'translate-x-5' : 'translate-x-0.5'}`} />
-              </div>
-            </button>
+            )}
           </div>
         )}
 
@@ -286,13 +258,14 @@ export default function BookingPage() {
               <User size={20} className="text-amber-500" /> بياناتك
             </h2>
 
-            {/* No-show warning */}
+            {/* Cancellation & no-show policy */}
             <div className="flex gap-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4">
               <AlertTriangle size={18} className="text-amber-400 shrink-0 mt-0.5" />
-              <p className="text-amber-200 text-sm leading-relaxed">
-                <span className="font-bold block mb-0.5">تنبيه مهم</span>
-                في حال عدم الحضور للموعد المحجوز، سيُطلب منك دفع مبلغ مسبق عند الحجز القادم.
-              </p>
+              <div className="text-amber-200 text-sm leading-relaxed space-y-1">
+                <p className="font-bold">سياسة الإلغاء</p>
+                <p>يرجى الإلغاء قبل الموعد بساعة على الأقل.</p>
+                <p>في حال عدم الحضور على الموعد المحدد، سيتم احتساب الموعد الملغى وقد يُطلب دفع مسبق عند الحجز القادم.</p>
+              </div>
             </div>
             <FormInput
               label="الاسم الكامل"
