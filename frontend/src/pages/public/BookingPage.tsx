@@ -258,15 +258,6 @@ export default function BookingPage() {
               <User size={20} className="text-amber-500" /> بياناتك
             </h2>
 
-            {/* Cancellation & no-show policy */}
-            <div className="flex gap-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4">
-              <AlertTriangle size={18} className="text-amber-400 shrink-0 mt-0.5" />
-              <div className="text-amber-200 text-sm leading-relaxed space-y-1">
-                <p className="font-bold">سياسة الإلغاء</p>
-                <p>يرجى الإلغاء قبل الموعد بساعة على الأقل.</p>
-                <p>في حال عدم الحضور على الموعد المحدد، سيتم احتساب الموعد الملغى وقد يُطلب دفع مسبق عند الحجز القادم.</p>
-              </div>
-            </div>
             <FormInput
               label="الاسم الكامل"
               value={form.customer_name}
@@ -292,8 +283,20 @@ export default function BookingPage() {
           </div>
         )}
 
+        {/* Cancellation policy — shown only on last step before confirm */}
+        {step === 3 && (
+          <div className="flex gap-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 mt-6">
+            <AlertTriangle size={18} className="text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-amber-200 text-sm leading-relaxed space-y-1" dir="rtl">
+              <p className="font-bold">سياسة الإلغاء</p>
+              <p>يرجى الإلغاء قبل الموعد بساعة على الأقل.</p>
+              <p>في حال عدم الحضور على الموعد المحدد، سيتم احتساب الموعد الملغى وقد يُطلب دفع مسبق عند الحجز القادم.</p>
+            </div>
+          </div>
+        )}
+
         {/* Navigation */}
-        <div className="flex justify-between items-center mt-8 pt-6 border-t border-zinc-800">
+        <div className="flex justify-between items-center mt-4 pt-6 border-t border-zinc-800">
           <button
             onClick={() => setStep(s => Math.max(0, s - 1))}
             disabled={step === 0}
