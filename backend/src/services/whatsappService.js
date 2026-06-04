@@ -5,10 +5,12 @@ const INSTANCE = process.env.ULTRAMSG_INSTANCE;
 const TOKEN    = process.env.ULTRAMSG_TOKEN;
 
 // ── تطبيع رقم الهاتف ─────────────────────────────────────────────────────────
-// 05XXXXXXXX → 9725XXXXXXXX
+// 05XXXXXXXX  → 9725XXXXXXXX
+// 970XXXXXXXX → 972XXXXXXXX  (Palestinian Authority code → Israeli code for WhatsApp)
 const normalizePhone = (phone) => {
   const p = phone.replace(/[\s\-\(\)\+]/g, '');
   if (p.startsWith('05'))  return '972' + p.substring(1);
+  if (p.startsWith('970')) return '972' + p.substring(3);
   if (p.startsWith('972')) return p;
   return p;
 };
