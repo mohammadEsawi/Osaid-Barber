@@ -96,7 +96,11 @@ async function startServer() {
 
   // تشغيل مهمة تذكيرات WhatsApp
   const { startReminderJob } = require("./jobs/reminderJob");
-  await startReminderJob();
+  try {
+    await startReminderJob();
+  } catch (err) {
+    console.error('[ReminderJob] فشل التشغيل — السيرفر يكمل بدونه:', err.message);
+  }
 
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {

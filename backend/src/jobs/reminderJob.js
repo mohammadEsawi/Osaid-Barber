@@ -2,16 +2,7 @@ const cron = require('node-cron');
 const { query } = require('../config/database');
 const { sendReminder } = require('../services/whatsappService');
 
-// أضف عمود reminder_sent إن لم يكن موجوداً
-const initColumn = async () => {
-  await query(`
-    ALTER TABLE appointments
-    ADD COLUMN IF NOT EXISTS reminder_sent BOOLEAN DEFAULT FALSE
-  `);
-};
-
 const runJob = async () => {
-  // ابحث عن مواعيد تبدأ بعد 29-31 دقيقة ولم يُرسل لها تذكير بعد
   const result = await query(`
     SELECT
       a.id,
@@ -42,10 +33,8 @@ const runJob = async () => {
 };
 
 const startReminderJob = async () => {
-  await initColumn();
-
-  // يعمل كل دقيقة
-  cron.schedule('* * * * *', async () => {
+  // يعمل كل 5 دقائق للتوفير في compute time
+  cron.schedule('*/5 * * * *', async () => {
     try {
       await runJob();
     } catch (err) {
@@ -53,7 +42,7 @@ const startReminderJob = async () => {
     }
   });
 
-  console.log('[ReminderJob] ✅ يعمل — يفحص كل دقيقة عن مواعيد بعد 30 دقيقة');
+  console.log('[ReminderJob] ✅ يعمل — يفحص كل 5 دقائق عن مواعيد بعد 30 دقيقة');
 };
 
 module.exports = { startReminderJob };
