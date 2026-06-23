@@ -2,7 +2,15 @@ const { query } = require('../config/database');
 
 exports.getAll = async (req, res) => {
   try {
-    const result = await query('SELECT * FROM shop_closures ORDER BY start_date DESC');
+    const result = await query(`
+      SELECT id,
+        TO_CHAR(start_date, 'YYYY-MM-DD') AS start_date,
+        TO_CHAR(end_date,   'YYYY-MM-DD') AS end_date,
+        TO_CHAR(start_time, 'HH24:MI')    AS start_time,
+        TO_CHAR(end_time,   'HH24:MI')    AS end_time,
+        reason, created_at
+      FROM shop_closures ORDER BY start_date DESC
+    `);
     res.json({ success: true, data: result.rows });
   } catch (err) {
     res.status(500).json({ success: false, message: 'خطأ في الخادم' });
