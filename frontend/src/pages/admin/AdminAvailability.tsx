@@ -330,7 +330,7 @@ function ShopClosuresPanel() {
             <div key={c.id} className="flex items-center justify-between bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2.5">
               <div>
                 <div className="text-white text-sm font-medium">
-                  {c.start_date} — {c.end_date}
+                  {c.start_date?.substring(0, 10)} — {c.end_date?.substring(0, 10)}
                 </div>
                 <div className="text-zinc-400 text-xs">
                   {c.start_time && c.end_time ? `${c.start_time.substring(0,5)} — ${c.end_time.substring(0,5)}` : 'يوم كامل'}
