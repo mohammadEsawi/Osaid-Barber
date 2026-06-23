@@ -107,6 +107,13 @@ export const settingsApi = {
   updateMany: (settings: Record<string, string>) => api.put('/settings', { settings }),
 };
 
+// --- Closures ---
+export const closuresApi = {
+  getAll: () => api.get('/closures'),
+  create: (data: object) => api.post('/closures', data),
+  remove: (id: number) => api.delete(`/closures/${id}`),
+};
+
 // --- Messages ---
 export const messagesApi = {
   send: (data: object) => api.post('/messages', data),

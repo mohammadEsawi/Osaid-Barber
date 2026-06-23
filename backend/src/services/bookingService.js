@@ -59,17 +59,19 @@ const checkSlotAvailability = async (barberId, date, startTime, durationMinutes,
     return { available: false, reason: 'الحلاق غير متاح في هذا الوقت' };
   }
 
-  // 2b. Check daily break time
-  const breakRes = await query(
-    "SELECT key, value FROM settings WHERE key IN ('shop_break_start', 'shop_break_end')"
+  // 2b. Check shop-wide closures for this date
+  const closureRes = await query(
+    `SELECT reason, start_time, end_time FROM shop_closures
+     WHERE $1::date BETWEEN start_date AND end_date`,
+    [date]
   );
-  const bMap = {};
-  for (const r of breakRes.rows) bMap[r.key] = r.value;
-  if (bMap['shop_break_start'] && bMap['shop_break_end']) {
-    const bStart = timeToMinutes(bMap['shop_break_start']);
-    const bEnd   = timeToMinutes(bMap['shop_break_end']);
-    if (!(endMins <= bStart || startMins >= bEnd)) {
-      return { available: false, reason: 'الصالون في وقت الاستراحة' };
+  for (const c of closureRes.rows) {
+    const fullDay = !c.start_time || !c.end_time;
+    if (fullDay) return { available: false, reason: c.reason || 'الصالون مغلق' };
+    const cs = timeToMinutes(c.start_time.substring(0, 5));
+    const ce = timeToMinutes(c.end_time.substring(0, 5));
+    if (!(endMins <= cs || startMins >= ce)) {
+      return { available: false, reason: c.reason || 'الصالون مغلق في هذا الوقت' };
     }
   }
 
@@ -166,14 +168,13 @@ const getAvailableSlots = async (barberId, date, durationMinutes) => {
     [barberId, date]
   );
 
-  // Query 4: break time settings
-  const breakResult = await query(
-    "SELECT key, value FROM settings WHERE key IN ('shop_break_start', 'shop_break_end')"
+  // Query 4: shop-wide closures for this date
+  const closureResult = await query(
+    `SELECT TO_CHAR(start_time,'HH24:MI') AS start_time, TO_CHAR(end_time,'HH24:MI') AS end_time
+     FROM shop_closures WHERE $1::date BETWEEN start_date AND end_date`,
+    [date]
   );
-  const breakMap = {};
-  for (const r of breakResult.rows) breakMap[r.key] = r.value;
-  const breakStart = breakMap['shop_break_start'] ? timeToMinutes(breakMap['shop_break_start']) : null;
-  const breakEnd   = breakMap['shop_break_end']   ? timeToMinutes(breakMap['shop_break_end'])   : null;
+  const closures = closureResult.rows;
 
   const workSlot = availResult.rows[0];
   const workStartMins = timeToMinutes(workSlot.start_time);
@@ -193,8 +194,11 @@ const getAvailableSlots = async (barberId, date, durationMinutes) => {
       const ue = timeToMinutes(u.end_time);
       if (!(slotEnd <= us || slotStart >= ue)) return true;
     }
-    if (breakStart !== null && breakEnd !== null) {
-      if (!(slotEnd <= breakStart || slotStart >= breakEnd)) return true;
+    for (const c of closures) {
+      if (!c.start_time || !c.end_time) return true;
+      const cs = timeToMinutes(c.start_time);
+      const ce = timeToMinutes(c.end_time);
+      if (!(slotEnd <= cs || slotStart >= ce)) return true;
     }
     return false;
   };

@@ -203,3 +203,13 @@ ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reminder_sent BOOLEAN DEFAULT 
 UPDATE services SET duration_minutes = 15 WHERE name = 'قص شعر الأطفال' AND duration_minutes != 15;
 INSERT INTO settings (key, value) VALUES ('slot_duration_minutes', '15')
   ON CONFLICT (key) DO UPDATE SET value = '15' WHERE settings.value = '30';
+
+CREATE TABLE IF NOT EXISTS shop_closures (
+  id SERIAL PRIMARY KEY,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  start_time TIME,
+  end_time TIME,
+  reason VARCHAR(255),
+  created_at TIMESTAMP DEFAULT NOW()
+);

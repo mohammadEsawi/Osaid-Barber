@@ -63,6 +63,7 @@ app.use("/api/orders", require("./routes/orders"));
 app.use("/api/reports", require("./routes/reports"));
 app.use("/api/messages", require("./routes/messages"));
 app.use("/api/settings", require("./routes/settings"));
+app.use("/api/closures", require("./routes/closures"));
 
 app.get("/api/health", async (req, res) => {
   const { query } = require("./config/database");

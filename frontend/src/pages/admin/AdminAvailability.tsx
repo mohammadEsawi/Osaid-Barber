@@ -3,7 +3,7 @@ import { LayoutDashboard, Calendar, Scissors, Users, Package, ShoppingBag, BarCh
 import DashboardLayout from '../../components/common/DashboardLayout';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { barbersApi } from '../../services/api';
+import { barbersApi, closuresApi } from '../../services/api';
 import { BarberProfile, BarberAvailability, DAYS_AR } from '../../types';
 import toast from 'react-hot-toast';
 
@@ -222,6 +222,132 @@ function BarberSchedulePanel({ barber }: { barber: BarberProfile }) {
   );
 }
 
+interface ShopClosure {
+  id: number;
+  start_date: string;
+  end_date: string;
+  start_time?: string;
+  end_time?: string;
+  reason?: string;
+}
+
+function ShopClosuresPanel() {
+  const qc = useQueryClient();
+  const [form, setForm] = useState({ start_date: '', end_date: '', start_time: '', end_time: '', reason: '' });
+  const [isSaving, setIsSaving] = useState(false);
+  const today = new Date().toISOString().split('T')[0];
+
+  const { data, refetch } = useQuery({
+    queryKey: ['shop-closures'],
+    queryFn: () => closuresApi.getAll(),
+  });
+  const closures: ShopClosure[] = data?.data?.data || [];
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.start_date || !form.end_date) return;
+    setIsSaving(true);
+    try {
+      await closuresApi.create(form);
+      toast.success('تم إضافة إغلاق الصالون');
+      refetch();
+      setForm({ start_date: '', end_date: '', start_time: '', end_time: '', reason: '' });
+    } catch { toast.error('فشل الإضافة'); }
+    finally { setIsSaving(false); }
+  };
+
+  const handleRemove = async (id: number) => {
+    try {
+      await closuresApi.remove(id);
+      toast.success('تم حذف الإغلاق');
+      refetch();
+    } catch { toast.error('فشل الحذف'); }
+  };
+
+  // suppress unused variable warning
+  void qc;
+
+  return (
+    <div className="card">
+      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-zinc-800">
+        <div className="w-8 h-8 bg-red-500/15 rounded-lg flex items-center justify-center">
+          <Trash2 size={15} className="text-red-400" />
+        </div>
+        <div>
+          <h2 className="text-white font-bold text-sm">إغلاق الصالون (كل الحلاقين)</h2>
+          <p className="text-zinc-500 text-xs">أغلق الصالون لفترة محددة — يطبق على جميع الحلاقين</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Form */}
+        <form onSubmit={handleAdd} className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1">من تاريخ</label>
+              <input type="date" min={today} value={form.start_date}
+                onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))}
+                className="input-field text-sm py-1.5 w-full" required />
+            </div>
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1">إلى تاريخ</label>
+              <input type="date" min={form.start_date || today} value={form.end_date}
+                onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))}
+                className="input-field text-sm py-1.5 w-full" required />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1">من ساعة (اختياري)</label>
+              <input type="time" value={form.start_time}
+                onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))}
+                className="input-field text-sm py-1.5" />
+            </div>
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1">إلى ساعة (اختياري)</label>
+              <input type="time" value={form.end_time}
+                onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))}
+                className="input-field text-sm py-1.5" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-zinc-500 mb-1">السبب</label>
+            <input type="text" value={form.reason}
+              onChange={e => setForm(f => ({ ...f, reason: e.target.value }))}
+              placeholder="إجازة، صيانة، ظروف طارئة..."
+              className="input-field text-sm py-1.5 w-full" />
+          </div>
+          <button type="submit" disabled={isSaving} className="btn-danger flex items-center gap-2 w-full justify-center text-sm py-2 disabled:opacity-40">
+            {isSaving ? <><LoadingSpinner size="sm" />جاري الإضافة...</> : <><Plus size={14} />إضافة إغلاق</>}
+          </button>
+        </form>
+
+        {/* List */}
+        <div className="space-y-2">
+          {closures.length === 0 ? (
+            <p className="text-zinc-600 text-sm text-center py-4">لا يوجد إغلاق مجدول</p>
+          ) : closures.map(c => (
+            <div key={c.id} className="flex items-center justify-between bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2.5">
+              <div>
+                <div className="text-white text-sm font-medium">
+                  {c.start_date} — {c.end_date}
+                </div>
+                <div className="text-zinc-400 text-xs">
+                  {c.start_time && c.end_time ? `${c.start_time.substring(0,5)} — ${c.end_time.substring(0,5)}` : 'يوم كامل'}
+                  {c.reason && <span className="text-red-300 mr-2">({c.reason})</span>}
+                </div>
+              </div>
+              <button onClick={() => handleRemove(c.id)} className="text-red-400 hover:text-red-300 p-1">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminAvailability() {
   const [activeBarber, setActiveBarber] = useState<number | null>(null);
 
@@ -243,6 +369,8 @@ export default function AdminAvailability() {
           <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>
         ) : (
           <>
+            <ShopClosuresPanel />
+
             {/* Barber tabs */}
             <div className="flex gap-2 flex-wrap">
               {barbers.map(b => (
