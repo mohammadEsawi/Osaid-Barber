@@ -54,6 +54,25 @@ export default function AdminReports() {
           </div>
         )}
 
+        {/* Monthly income numbers */}
+        {monthlyIncome.length > 0 && (
+          <div className="card">
+            <h2 className="text-white font-bold mb-4">إجمالي الدخل الشهري</h2>
+            <div className="divide-y divide-zinc-800">
+              {monthlyIncome.map((m: { month: string; income: number }, i: number) => (
+                <div key={i} className="flex justify-between items-center py-2.5">
+                  <span className="text-zinc-300 text-sm">{m.month}</span>
+                  <span className="text-amber-500 font-bold">{parseFloat(String(m.income)).toFixed(2)} ₪</span>
+                </div>
+              ))}
+              <div className="flex justify-between items-center py-2.5 font-bold">
+                <span className="text-white">الإجمالي</span>
+                <span className="text-amber-400 text-lg">{monthlyIncome.reduce((s: number, m: { income: number }) => s + parseFloat(String(m.income)), 0).toFixed(2)} ₪</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Status distribution */}
           {statusDist.length > 0 && (

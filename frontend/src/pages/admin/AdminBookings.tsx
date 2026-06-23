@@ -54,7 +54,8 @@ export default function AdminBookings() {
     queryFn: () => appointmentsApi.getAll({
       status: filters.status || undefined,
       date: filters.date || undefined,
-      exclude_status: filters.status ? undefined : 'completed',
+      exclude_status: (filters.status || filters.date) ? undefined : 'completed',
+      limit: 500,
     }),
   });
   const appointments: Appointment[] = data?.data?.data || [];
@@ -62,11 +63,8 @@ export default function AdminBookings() {
   // Separate query for day navigator — always all dates, no date filter
   const [navIdx, setNavIdx] = useState(0);
   const { data: navData } = useQuery({
-    queryKey: ['appointments-nav', filters.status],
-    queryFn: () => appointmentsApi.getAll({
-      status: filters.status || undefined,
-      exclude_status: filters.status ? undefined : 'completed',
-    }),
+    queryKey: ['appointments-nav'],
+    queryFn: () => appointmentsApi.getAll({ limit: 500 }),
     staleTime: 60 * 1000,
   });
   const allForNav: Appointment[] = navData?.data?.data || [];

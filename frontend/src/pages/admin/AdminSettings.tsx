@@ -55,6 +55,8 @@ const DEFAULTS: SettingsMap = {
   slot_duration_minutes: '30',
   shop_open_time: '09:00',
   shop_close_time: '21:00',
+  shop_break_start: '15:00',
+  shop_break_end: '16:00',
   whatsapp_confirmation_enabled: 'true',
   whatsapp_reminder_enabled: 'true',
   whatsapp_confirmation_template: DEFAULT_CONFIRMATION,
@@ -155,6 +157,16 @@ export default function AdminSettings() {
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-1">وقت الإغلاق</label>
                   <input type="time" value={form.shop_close_time} onChange={set('shop_close_time')} className="input-field" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">بداية الاستراحة</label>
+                  <input type="time" value={form.shop_break_start} onChange={set('shop_break_start')} className="input-field" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">نهاية الاستراحة</label>
+                  <input type="time" value={form.shop_break_end} onChange={set('shop_break_end')} className="input-field" />
                 </div>
               </div>
               <FormInput label="مدة الحلقة الزمنية (دقيقة)" type="number" value={form.slot_duration_minutes} onChange={set('slot_duration_minutes')} min="15" step="15" />

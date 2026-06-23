@@ -59,6 +59,20 @@ const checkSlotAvailability = async (barberId, date, startTime, durationMinutes,
     return { available: false, reason: 'الحلاق غير متاح في هذا الوقت' };
   }
 
+  // 2b. Check daily break time
+  const breakRes = await query(
+    "SELECT key, value FROM settings WHERE key IN ('shop_break_start', 'shop_break_end')"
+  );
+  const bMap = {};
+  for (const r of breakRes.rows) bMap[r.key] = r.value;
+  if (bMap['shop_break_start'] && bMap['shop_break_end']) {
+    const bStart = timeToMinutes(bMap['shop_break_start']);
+    const bEnd   = timeToMinutes(bMap['shop_break_end']);
+    if (!(endMins <= bStart || startMins >= bEnd)) {
+      return { available: false, reason: 'الصالون في وقت الاستراحة' };
+    }
+  }
+
   // 3. Check existing appointments
   let conflictQuery = `
     SELECT id, start_time, end_time, customer_name
@@ -152,6 +166,15 @@ const getAvailableSlots = async (barberId, date, durationMinutes) => {
     [barberId, date]
   );
 
+  // Query 4: break time settings
+  const breakResult = await query(
+    "SELECT key, value FROM settings WHERE key IN ('shop_break_start', 'shop_break_end')"
+  );
+  const breakMap = {};
+  for (const r of breakResult.rows) breakMap[r.key] = r.value;
+  const breakStart = breakMap['shop_break_start'] ? timeToMinutes(breakMap['shop_break_start']) : null;
+  const breakEnd   = breakMap['shop_break_end']   ? timeToMinutes(breakMap['shop_break_end'])   : null;
+
   const workSlot = availResult.rows[0];
   const workStartMins = timeToMinutes(workSlot.start_time);
   const workEndMins = timeToMinutes(workSlot.end_time);
@@ -169,6 +192,9 @@ const getAvailableSlots = async (barberId, date, durationMinutes) => {
       const us = timeToMinutes(u.start_time);
       const ue = timeToMinutes(u.end_time);
       if (!(slotEnd <= us || slotStart >= ue)) return true;
+    }
+    if (breakStart !== null && breakEnd !== null) {
+      if (!(slotEnd <= breakStart || slotStart >= breakEnd)) return true;
     }
     return false;
   };
