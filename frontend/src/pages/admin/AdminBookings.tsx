@@ -54,7 +54,7 @@ export default function AdminBookings() {
     queryFn: () => appointmentsApi.getAll({
       status: filters.status || undefined,
       date: filters.date || undefined,
-      exclude_status: (filters.status || filters.date) ? undefined : 'completed',
+      exclude_status: filters.status === 'completed' ? undefined : 'completed',
       limit: 500,
     }),
   });
