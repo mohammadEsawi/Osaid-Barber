@@ -64,7 +64,7 @@ export default function AdminBookings() {
   const [navIdx, setNavIdx] = useState(0);
   const { data: navData } = useQuery({
     queryKey: ['appointments-nav'],
-    queryFn: () => appointmentsApi.getAll({ limit: 500 }),
+    queryFn: () => appointmentsApi.getAll({ exclude_status: 'completed', limit: 500 }),
     staleTime: 60 * 1000,
   });
   const allForNav: Appointment[] = navData?.data?.data || [];
