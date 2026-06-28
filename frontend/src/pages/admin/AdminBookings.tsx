@@ -81,6 +81,18 @@ export default function AdminBookings() {
       .map(([date, appts]) => ({ date, appts }));
   }, [allForNav]);
 
+  // On first load, jump to today (or nearest future date)
+  const [navInitialized, setNavInitialized] = useState(false);
+  useEffect(() => {
+    if (navInitialized || dateGroups.length === 0) return;
+    const today = localTodayStr();
+    let idx = dateGroups.findIndex(g => g.date >= today);
+    if (idx < 0) idx = dateGroups.length - 1;
+    setNavIdx(idx);
+    setFilters(f => ({ ...f, date: dateGroups[idx].date }));
+    setNavInitialized(true);
+  }, [dateGroups, navInitialized]);
+
   // Sync navIdx when filters.date changes from the date input
   useEffect(() => {
     if (filters.date) {
