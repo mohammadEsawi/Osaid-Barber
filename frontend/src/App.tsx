@@ -41,6 +41,7 @@ import BarberProfile from './pages/barber/BarberProfile';
 
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/common/ScrollToTop';
+import ClosureBanner from './components/common/ClosureBanner';
 
 const ProtectedRoute = ({ children, roles }: { children: JSX.Element; roles: string[] }) => {
   const { user, isLoading } = useAuth();
@@ -100,6 +101,7 @@ const AppRoutes = () => {
 const App = () => (
   <BrowserRouter>
     <ScrollToTop />
+    <ClosureBanner />
     <AuthProvider>
       <CartProvider>
         <AppRoutes />

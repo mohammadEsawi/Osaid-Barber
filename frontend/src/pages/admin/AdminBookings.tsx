@@ -8,7 +8,7 @@ import TimeSlotPicker from '../../components/booking/TimeSlotPicker';
 import { FormInput, FormTextarea } from '../../components/ui/FormInput';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { appointmentsApi, servicesApi, barbersApi, closuresApi } from '../../services/api';
+import { appointmentsApi, servicesApi, barbersApi } from '../../services/api';
 import { Appointment, AppointmentStatus, STATUS_LABELS, Service, BarberProfile, TimeSlot } from '../../types';
 import { formatTimeArabic, formatDate, localTodayStr, validatePhone } from '../../utils/helpers';
 import toast from 'react-hot-toast';
@@ -59,26 +59,6 @@ export default function AdminBookings() {
     }),
   });
   const appointments: Appointment[] = data?.data?.data || [];
-
-  // Show toast if today has a shop closure
-  const { data: closuresData } = useQuery({ queryKey: ['closures-admin'], queryFn: () => closuresApi.getAll() });
-  useEffect(() => {
-    const closures = closuresData?.data?.data;
-    if (!closures || closures.length === 0) return;
-    const today = localTodayStr();
-    for (const c of closures) {
-      const start = (c.start_date || '').substring(0, 10);
-      const end = (c.end_date || '').substring(0, 10);
-      if (today >= start && today <= end) {
-        const reason = c.reason || 'إغلاق مؤقت';
-        if (c.start_time && c.end_time) {
-          toast(`${reason}\n📅 ${formatDate(today)}\n⏰ ${formatTimeArabic(c.start_time)} — ${formatTimeArabic(c.end_time)}`, { icon: '🔒', duration: 8000, id: `closure-${c.id}` });
-        } else {
-          toast(`${reason}\n📅 ${formatDate(today)} — يوم كامل`, { icon: '🔒', duration: 8000, id: `closure-${c.id}` });
-        }
-      }
-    }
-  }, [closuresData]);
 
   // Separate query for day navigator — always all dates, no date filter
   const [navIdx, setNavIdx] = useState(0);

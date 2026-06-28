@@ -9,9 +9,9 @@ import TimeSlotPicker from '../../components/booking/TimeSlotPicker';
 import { FormInput, FormTextarea } from '../../components/ui/FormInput';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useQuery } from '@tanstack/react-query';
-import { servicesApi, barbersApi, appointmentsApi, closuresApi } from '../../services/api';
+import { servicesApi, barbersApi, appointmentsApi } from '../../services/api';
 import { Service, BarberProfile, TimeSlot, BarberAvailability } from '../../types';
-import { formatTimeArabic, formatDate, localTodayStr, validatePhone } from '../../utils/helpers';
+import { formatTimeArabic, validatePhone } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const STEPS = ['الخدمات', 'الحلاق', 'الموعد', 'البيانات'];
@@ -38,30 +38,9 @@ export default function BookingPage() {
     enabled: !!selectedBarber,
   });
 
-  const { data: closuresData } = useQuery({ queryKey: ['closures'], queryFn: () => closuresApi.getAll() });
-
   const services: Service[] = servicesData?.data?.data || [];
   const barbers: BarberProfile[] = barbersData?.data?.data || [];
   const barberAvailability: BarberAvailability[] = availData?.data?.data || [];
-
-  // Show toast if today has a closure
-  useEffect(() => {
-    const closures = closuresData?.data?.data;
-    if (!closures || closures.length === 0) return;
-    const today = localTodayStr();
-    for (const c of closures) {
-      const start = (c.start_date || '').substring(0, 10);
-      const end = (c.end_date || '').substring(0, 10);
-      if (today >= start && today <= end) {
-        const reason = c.reason || 'إغلاق مؤقت';
-        if (c.start_time && c.end_time) {
-          toast(`${reason}\n📅 ${formatDate(today)}\n⏰ ${formatTimeArabic(c.start_time)} — ${formatTimeArabic(c.end_time)}`, { icon: '🔒', duration: 8000, id: `closure-${c.id}` });
-        } else {
-          toast(`${reason}\n📅 ${formatDate(today)} — يوم كامل`, { icon: '🔒', duration: 8000, id: `closure-${c.id}` });
-        }
-      }
-    }
-  }, [closuresData]);
 
   useEffect(() => {
     if (preSelectedBarber && barbers.length > 0) {
