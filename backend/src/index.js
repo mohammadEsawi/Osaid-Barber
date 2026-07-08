@@ -75,9 +75,19 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
-// Error handling
-app.use(notFound);
-app.use(errorHandler);
+// Serve React frontend (production)
+const frontendDist = path.join(__dirname, "..", "public");
+const fs2 = require("fs");
+if (fs2.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(frontendDist, "index.html"));
+  });
+} else {
+  // Error handling (dev/API-only mode)
+  app.use(notFound);
+  app.use(errorHandler);
+}
 
 async function startServer() {
   const { query } = require("./config/database");
