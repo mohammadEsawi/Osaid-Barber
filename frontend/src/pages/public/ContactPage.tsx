@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, ExternalLink } from 'lucide-react';
 import { FaInstagram, FaFacebook, FaTiktok } from 'react-icons/fa';
@@ -37,6 +38,11 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950">
+      <Helmet>
+        <title>تواصل معنا | أوسيد باربر</title>
+        <meta name="description" content="تواصل مع أوسيد باربر. عنواننا: بيتا الفوقا، نابلس. رقم الهاتف: 0515718974. أو أرسل لنا رسالة مباشرة." />
+        <link rel="canonical" href="https://osaid-barber.vercel.app/contact" />
+      </Helmet>
       <Navbar />
       <div className="pt-24 pb-20 max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-12">

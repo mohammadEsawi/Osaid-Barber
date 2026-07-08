@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
@@ -22,6 +23,11 @@ export default function StorePage() {
 
   return (
     <div className="min-h-screen bg-zinc-950">
+      <Helmet>
+        <title>المتجر | أوسيد باربر</title>
+        <meta name="description" content="تسوق منتجات العناية بالشعر واللحية من متجر أوسيد باربر. منتجات احترافية بأسعار مناسبة." />
+        <link rel="canonical" href="https://osaid-barber.vercel.app/store" />
+      </Helmet>
       <Navbar />
       <div className="pt-24 pb-20 max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-10">

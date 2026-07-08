@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { Scissors, Award, Users, Heart } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
@@ -10,6 +11,11 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950">
+      <Helmet>
+        <title>من نحن | أوسيد باربر</title>
+        <meta name="description" content="قصة أوسيد باربر — صالون حلاقة احترافي في بيتا، نابلس. تأسس بشغف الحلاقة وتقديم أفضل تجربة للزبون." />
+        <link rel="canonical" href="https://osaid-barber.vercel.app/about" />
+      </Helmet>
       <Navbar />
       <div className="pt-24 pb-20 max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-16">

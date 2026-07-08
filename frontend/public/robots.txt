@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Admin pages - no indexing
+Disallow: /admin/
+Disallow: /barber/
+Disallow: /login
+
+Sitemap: https://osaid-barber.vercel.app/sitemap.xml

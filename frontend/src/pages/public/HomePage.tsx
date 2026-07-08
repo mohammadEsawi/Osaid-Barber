@@ -1,4 +1,5 @@
-﻿import { Link } from 'react-router-dom';
+﻿import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
 import { Scissors, Star, Clock, Users, Award, ChevronLeft, Calendar } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
@@ -24,6 +25,11 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-zinc-950">
+      <Helmet>
+        <title>أوسيد باربر | صالون الحلاقة الاحترافي — بيتا، نابلس</title>
+        <meta name="description" content="أوسيد باربر، صالون حلاقة احترافي في بيتا الفوقا، نابلس. احجز موعدك أونلاين الآن واحصل على أفضل خدمات الحلاقة وتشكيل اللحية." />
+        <link rel="canonical" href="https://osaid-barber.vercel.app/" />
+      </Helmet>
       <Navbar />
 
       {/* Hero */}

@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Calendar, Star } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
@@ -13,6 +14,11 @@ export default function BarbersPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950">
+      <Helmet>
+        <title>حلاقونا | أوسيد باربر</title>
+        <meta name="description" content="تعرّف على فريق الحلاقين المحترفين في أوسيد باربر. خبرة عالية وأسلوب عصري. احجز مع حلاقك المفضل الآن." />
+        <link rel="canonical" href="https://osaid-barber.vercel.app/barbers" />
+      </Helmet>
       <Navbar />
       <div className="pt-24 pb-20 max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-12">

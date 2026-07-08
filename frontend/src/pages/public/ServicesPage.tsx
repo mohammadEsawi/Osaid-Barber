@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Calendar } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
@@ -14,6 +15,11 @@ export default function ServicesPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950">
+      <Helmet>
+        <title>خدماتنا | أوسيد باربر</title>
+        <meta name="description" content="تعرّف على جميع خدمات أوسيد باربر: قص الشعر، تشكيل اللحية، الحلاقة الكلاسيكية وأكثر. أسعار مناسبة وحلاقون محترفون." />
+        <link rel="canonical" href="https://osaid-barber.vercel.app/services" />
+      </Helmet>
       <Navbar />
       <div className="pt-24 pb-20 max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-12">

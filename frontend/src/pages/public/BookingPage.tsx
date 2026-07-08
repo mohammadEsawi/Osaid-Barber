@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, ChevronLeft, ChevronRight, User, Scissors, Calendar, Clock, AlertTriangle } from 'lucide-react';
@@ -115,6 +116,11 @@ export default function BookingPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950">
+      <Helmet>
+        <title>احجز موعدك | أوسيد باربر</title>
+        <meta name="description" content="احجز موعد حلاقة أونلاين في أوسيد باربر. اختر الحلاق والخدمة والوقت المناسب لك بسهولة." />
+        <link rel="canonical" href="https://osaid-barber.vercel.app/booking" />
+      </Helmet>
       <Navbar />
       <div className="pt-24 pb-20 max-w-4xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-10">
