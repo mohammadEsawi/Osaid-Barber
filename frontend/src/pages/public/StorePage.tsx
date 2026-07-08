@@ -26,7 +26,7 @@ export default function StorePage() {
       <Helmet>
         <title>المتجر | أوسيد باربر</title>
         <meta name="description" content="تسوق منتجات العناية بالشعر واللحية من متجر أوسيد باربر. منتجات احترافية بأسعار مناسبة." />
-        <link rel="canonical" href="https://osaid-barber.vercel.app/store" />
+        <link rel="canonical" href="https://osaidsaloon.store/store" />
       </Helmet>
       <Navbar />
       <div className="pt-24 pb-20 max-w-7xl mx-auto px-4 sm:px-6">

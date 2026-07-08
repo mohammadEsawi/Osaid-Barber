@@ -41,7 +41,7 @@ export default function ContactPage() {
       <Helmet>
         <title>تواصل معنا | أوسيد باربر</title>
         <meta name="description" content="تواصل مع أوسيد باربر. عنواننا: بيتا الفوقا، نابلس. رقم الهاتف: 0515718974. أو أرسل لنا رسالة مباشرة." />
-        <link rel="canonical" href="https://osaid-barber.vercel.app/contact" />
+        <link rel="canonical" href="https://osaidsaloon.store/contact" />
       </Helmet>
       <Navbar />
       <div className="pt-24 pb-20 max-w-7xl mx-auto px-4 sm:px-6">

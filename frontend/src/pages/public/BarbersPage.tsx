@@ -17,7 +17,7 @@ export default function BarbersPage() {
       <Helmet>
         <title>حلاقونا | أوسيد باربر</title>
         <meta name="description" content="تعرّف على فريق الحلاقين المحترفين في أوسيد باربر. خبرة عالية وأسلوب عصري. احجز مع حلاقك المفضل الآن." />
-        <link rel="canonical" href="https://osaid-barber.vercel.app/barbers" />
+        <link rel="canonical" href="https://osaidsaloon.store/barbers" />
       </Helmet>
       <Navbar />
       <div className="pt-24 pb-20 max-w-7xl mx-auto px-4 sm:px-6">

@@ -18,7 +18,7 @@ export default function ServicesPage() {
       <Helmet>
         <title>خدماتنا | أوسيد باربر</title>
         <meta name="description" content="تعرّف على جميع خدمات أوسيد باربر: قص الشعر، تشكيل اللحية، الحلاقة الكلاسيكية وأكثر. أسعار مناسبة وحلاقون محترفون." />
-        <link rel="canonical" href="https://osaid-barber.vercel.app/services" />
+        <link rel="canonical" href="https://osaidsaloon.store/services" />
       </Helmet>
       <Navbar />
       <div className="pt-24 pb-20 max-w-7xl mx-auto px-4 sm:px-6">

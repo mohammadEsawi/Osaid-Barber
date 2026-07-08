@@ -6,4 +6,4 @@ Disallow: /admin/
 Disallow: /barber/
 Disallow: /login
 
-Sitemap: https://osaid-barber.vercel.app/sitemap.xml
+Sitemap: https://osaidsaloon.store/sitemap.xml

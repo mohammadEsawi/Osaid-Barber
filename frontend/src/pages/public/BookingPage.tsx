@@ -119,7 +119,7 @@ export default function BookingPage() {
       <Helmet>
         <title>احجز موعدك | أوسيد باربر</title>
         <meta name="description" content="احجز موعد حلاقة أونلاين في أوسيد باربر. اختر الحلاق والخدمة والوقت المناسب لك بسهولة." />
-        <link rel="canonical" href="https://osaid-barber.vercel.app/booking" />
+        <link rel="canonical" href="https://osaidsaloon.store/booking" />
       </Helmet>
       <Navbar />
       <div className="pt-24 pb-20 max-w-4xl mx-auto px-4 sm:px-6">

@@ -16,7 +16,7 @@ app.use(morgan("combined"));
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://osaid-barber.vercel.app",
+  "https://osaidsaloon.store",
   ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(",").map(o => o.trim()) : []),
 ];
 

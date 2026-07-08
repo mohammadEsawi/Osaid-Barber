@@ -14,7 +14,7 @@ export default function AboutPage() {
       <Helmet>
         <title>من نحن | أوسيد باربر</title>
         <meta name="description" content="قصة أوسيد باربر — صالون حلاقة احترافي في بيتا، نابلس. تأسس بشغف الحلاقة وتقديم أفضل تجربة للزبون." />
-        <link rel="canonical" href="https://osaid-barber.vercel.app/about" />
+        <link rel="canonical" href="https://osaidsaloon.store/about" />
       </Helmet>
       <Navbar />
       <div className="pt-24 pb-20 max-w-7xl mx-auto px-4 sm:px-6">
